@@ -8,53 +8,10 @@ import {
 import { useState, useEffect } from "react";
 import Login from "./Login";
 import MePage from "./MePage";
-import { fetchProjects } from "./api";
-import type { LoginResponse, Project } from "./types";
+import type { LoginResponse } from "./types";
+import { getToken, clearAuth } from "./auth";
 
-function Projects({
-  token,
-  onLogout,
-}: {
-  token: string;
-  onLogout: () => void;
-}) {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [err, setErr] = useState("");
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const data = await fetchProjects(token);
-        setProjects(data);
-      } catch (e: any) {
-        setErr(e.message);
-      }
-    })();
-  }, [token]);
-
-  return (
-    <div style={{ maxWidth: 720, margin: "32px auto" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <h2>Projects</h2>
-        <button onClick={onLogout}>ログアウト</button>
-      </div>
-      {err && <p style={{ color: "crimson" }}>{err}</p>}
-      <ul>
-        {projects.map((p) => (
-          <li key={p.id}>{p.name}</li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function ProtectedRoute({
+function Protected({
   token,
   children,
 }: {
@@ -66,15 +23,28 @@ function ProtectedRoute({
 }
 
 export default function App() {
-  const [token, setToken] = useState<string | null>(() =>
-    localStorage.getItem("access_token")
-  );
+  const [token, setToken] = useState<string | null>(() => getToken());
+
+  // 別タブのログアウトなどに対応
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "access_token") {
+        setToken(getToken());
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
   const handleLoginSuccess = (res: LoginResponse) => {
+    // 念のためstateも更新
     setToken(res.token);
   };
+
   const handleLogout = () => {
-    localStorage.clear();
+    // 1) localStorage をクリア
+    clearAuth();
+    // 2) App の state を同期的に null にする
     setToken(null);
   };
 
@@ -87,13 +57,17 @@ export default function App() {
             token ? (
               <Navigate to="/me" replace />
             ) : (
-              <Login onSuccess={(r: LoginResponse) => setToken(r.token)} />
+              <Login onSuccess={handleLoginSuccess} />
             )
           }
         />
         <Route
           path="/me"
-          element={token ? <MePage /> : <Navigate to="/login" replace />}
+          element={
+            <Protected token={token}>
+              <MePage onLogout={handleLogout} />
+            </Protected>
+          }
         />
         <Route
           path="/"

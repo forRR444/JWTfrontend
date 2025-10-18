@@ -2,12 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "./api";
 
-type Me = {
-  id: number | string;
-  name: string;
-};
+type Me = { id: number | string; name: string };
 
-export default function MePage() {
+export default function MePage({ onLogout }: { onLogout: () => void }) {
   const [me, setMe] = useState<Me | null>(null);
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -30,6 +27,13 @@ export default function MePage() {
     })();
   }, [token, navigate]);
 
+  const handleLogoutClick = () => {
+    // App に状態クリアを伝える
+    onLogout();
+    // ログアウト後、強制的に /login へ移動
+    navigate("/login", { replace: true });
+  };
+
   if (error) return <p style={{ color: "crimson" }}>{error}</p>;
   if (!me) return <p>読み込み中...</p>;
 
@@ -38,16 +42,8 @@ export default function MePage() {
       <h2>マイページ</h2>
       <p>ID: {String(me.id)}</p>
       <p>名前: {me.name}</p>
-
       <div style={{ marginTop: 16 }}>
-        <button
-          onClick={() => {
-            localStorage.clear();
-            navigate("/login", { replace: true });
-          }}
-        >
-          ログアウト
-        </button>
+        <button onClick={handleLogoutClick}>ログアウト</button>
       </div>
     </div>
   );
