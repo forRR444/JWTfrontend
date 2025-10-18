@@ -1,7 +1,45 @@
+// api.ts
 import type { LoginResponse } from "./types";
 
 const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || "http://localhost:3000";
 const API_BASE = `${API_ORIGIN}/api/v1`;
+
+// === 共通：未認証に戻す（イベント通知付き） ★
+function hardSignOut() {
+  try {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("access_token_expires");
+    localStorage.removeItem("current_user");
+  } finally {
+    // どこからでも拾えるようにアプリ全体へ通知
+    window.dispatchEvent(new Event("unauthorized"));
+  }
+}
+
+// === 共通：保存トークンの取得と有効性チェック ★
+function getStoredToken(): string | null {
+  return localStorage.getItem("access_token");
+}
+function getStoredExp(): number {
+  // exp を秒で保存している前提。未設定は 0 扱い
+  const raw = localStorage.getItem("access_token_expires") || "0";
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : 0;
+}
+function isAccessTokenExpired(): boolean {
+  const expSec = getStoredExp();
+  if (!expSec) return true;
+  const nowSec = Math.floor(Date.now() / 1000);
+  // 多少の時計ズレに寛容に（30秒早めに期限切れ扱い） ★
+  return nowSec >= expSec - 30;
+}
+
+// === 起動時：期限切れの残骸をクリア（呼び出しはアプリ側のエントリで） ★
+export function initAuthOnBoot() {
+  if (!getStoredToken() || isAccessTokenExpired()) {
+    hardSignOut();
+  }
+}
 
 export class ApiError extends Error {
   status?: number;
@@ -17,7 +55,7 @@ export class ApiError extends Error {
 type ApiFetchInit = {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
-  token?: string | null;
+  token?: string | null; // 未指定ならストレージの有効トークンを自動採用 ★
   // 内部用：リフレッシュ後の再試行フラグ
   _retry?: boolean;
 };
@@ -35,7 +73,7 @@ async function rawFetch(
   const res = await fetch(`${API_BASE}${path}`, {
     method,
     headers,
-    credentials: "include",
+    credentials: "include", // refresh_token Cookie を送るため必須
     body: body != null ? JSON.stringify(body) : undefined,
   });
 
@@ -53,12 +91,10 @@ async function rawFetch(
   return data;
 }
 
-// === 新規: リフレッシュAPI ===
+// === 新規: リフレッシュAPI（Cookie の refresh_token を使用） ===
 export async function refreshToken(): Promise<LoginResponse> {
-  // Cookie の refresh_token を使うので body は不要
   const res = await rawFetch("/auth_token/refresh", { method: "POST" });
-  // 返り値は { token, expires, user }
-  return res as LoginResponse;
+  return res as LoginResponse; // { token, expires, user }
 }
 
 // === 401時に自動リフレッシュ → 1回だけ再試行するラッパ ===
@@ -66,36 +102,57 @@ export async function apiFetch<T>(
   path: string,
   init: ApiFetchInit = {}
 ): Promise<T> {
-  const { _retry, ...rest } = init;
+  // token 未指定なら保存済みの有効トークンを自動採用 ★
+  const token =
+    init.token ?? (isAccessTokenExpired() ? null : getStoredToken());
+  const { _retry, ...rest } = { ...init, token };
+
   try {
     return (await rawFetch(path, rest)) as T;
   } catch (e: any) {
+    // 401 かつ未再試行なら refresh を試みる
     if (e instanceof ApiError && e.status === 401 && !_retry) {
-      // リフレッシュを試みる
       try {
         const r = await refreshToken();
         // 新アクセストークンを保存
         localStorage.setItem("access_token", r.token);
+        // expires は秒数で保存している前提。API が ms なら適宜調整を ★
         localStorage.setItem("access_token_expires", String(r.expires ?? ""));
         localStorage.setItem("current_user", JSON.stringify(r.user ?? null));
-        // 新トークンで1回だけ再試行
-        return (await rawFetch(path, { ...rest, token: r.token })) as T;
-      } catch {
-        // リフレッシュ失敗 → そのまま401を投げる
+
+        // 新トークンで 1 回だけ再試行
+        return (await rawFetch(path, {
+          ...rest,
+          token: r.token,
+          _retry: true, // 無限ループ抑止（念のため） ★
+        })) as T;
+      } catch (refreshErr) {
+        // リフレッシュ失敗：認証状態をクリアして通知し、元の 401 を投げる ★
+        hardSignOut();
         throw e;
       }
     }
+
+    // 401 以外、または再試行済みの 401 はそのまま投げる
     throw e;
   }
 }
 
-// 既存
+// === エンドポイント関数 ===
 export function login(params: { email: string; password: string }) {
+  // login は未認証前提なので token 付与は不要
   return apiFetch<LoginResponse>("/auth_token", {
     method: "POST",
     body: { auth: params },
   });
 }
-export function fetchProjects(token: string) {
+
+export function fetchProjects(token?: string) {
+  // token を明示しなくても保存済み有効トークンを使う ★
   return apiFetch<any[]>("/projects", { token });
+}
+
+// ===（任意）明示サインアウト API 呼び出し用のヘルパー ★===
+export function signOutLocally() {
+  hardSignOut();
 }
