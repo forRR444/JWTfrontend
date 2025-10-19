@@ -168,3 +168,51 @@ export function register(params: {
     body: { user: params },
   });
 }
+
+// Meals
+export interface Meal {
+  id: number;
+  meal_type: "breakfast" | "lunch" | "dinner" | "snack" | "other";
+  content: string;
+  calories?: number | null;
+  grams?: number | null;
+  tags: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export function listMeals() {
+  return apiFetch<Meal[]>("/meals");
+}
+
+export function createMeal(
+  meal: Partial<Meal> & { content: string; meal_type?: Meal["meal_type"] }
+) {
+  const payload = {
+    meal: {
+      meal_type: meal.meal_type || "other",
+      content: meal.content,
+      calories: meal.calories,
+      grams: meal.grams,
+      tags: meal.tags || [],
+    },
+  };
+  return apiFetch<Meal>("/meals", { method: "POST", body: payload });
+}
+
+export function updateMeal(id: number, meal: Partial<Meal>) {
+  const payload = {
+    meal: {
+      meal_type: meal.meal_type,
+      content: meal.content,
+      calories: meal.calories,
+      grams: meal.grams,
+      tags: meal.tags,
+    },
+  };
+  return apiFetch<Meal>(`/meals/${id}`, { method: "PATCH", body: payload });
+}
+
+export function deleteMeal(id: number) {
+  return apiFetch<void>(`/meals/${id}`, { method: "DELETE" });
+}
