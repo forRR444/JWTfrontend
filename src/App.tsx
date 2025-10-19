@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import Login from "./Login";
 import SignUp from "./SignUp";
 import MePage from "./MePage";
+import MealsPage from "./MealsPage";
 import type { LoginResponse } from "./types";
 import { getToken, clearAuth } from "./auth";
 
@@ -125,7 +126,7 @@ export default function App() {
           path="/login"
           element={
             token && !isAccessTokenExpired() ? (
-              <Navigate to="/me" replace />
+              <Navigate to="/meals" replace />
             ) : (
               <Login onSuccess={handleLoginSuccess} />
             )
@@ -145,10 +146,18 @@ export default function App() {
           }
         />
         <Route
+          path="/meals"
+          element={
+            <Protected token={token}>
+              <MealsPage />
+            </Protected>
+          }
+        />
+        <Route
           path="/"
           element={
             <Navigate
-              to={token && !isAccessTokenExpired() ? "/me" : "/login"}
+              to={token && !isAccessTokenExpired() ? "/meals" : "/login"}
               replace
             />
           }
