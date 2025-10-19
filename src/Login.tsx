@@ -2,6 +2,7 @@ import { useState, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "./api";
 import type { LoginResponse } from "./types";
+import { Link } from "react-router-dom";
 
 export default function Login({
   onSuccess,
@@ -79,6 +80,9 @@ export default function Login({
           {loading ? "送信中..." : "ログイン"}
         </button>
       </form>
+      <p style={{ marginTop: 16 }}>
+        アカウントをお持ちでないですか？ <Link to="/signup">新規登録</Link>
+      </p>
     </div>
   );
 }
