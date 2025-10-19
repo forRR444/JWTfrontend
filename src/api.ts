@@ -4,7 +4,7 @@ import type { LoginResponse } from "./types";
 const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || "http://localhost:3000";
 const API_BASE = `${API_ORIGIN}/api/v1`;
 
-// === 共通：未認証に戻す（イベント通知付き） ★
+// === 共通：未認証に戻す（イベント通知付き）
 function hardSignOut() {
   try {
     localStorage.removeItem("access_token");
@@ -16,7 +16,7 @@ function hardSignOut() {
   }
 }
 
-// === 共通：保存トークンの取得と有効性チェック ★
+// === 共通：保存トークンの取得と有効性チェック
 function getStoredToken(): string | null {
   return localStorage.getItem("access_token");
 }
@@ -30,11 +30,11 @@ function isAccessTokenExpired(): boolean {
   const expSec = getStoredExp();
   if (!expSec) return true;
   const nowSec = Math.floor(Date.now() / 1000);
-  // 多少の時計ズレに寛容に（30秒早めに期限切れ扱い） ★
+  // 多少の時計ズレに寛容に（30秒早めに期限切れ扱い）
   return nowSec >= expSec - 30;
 }
 
-// === 起動時：期限切れの残骸をクリア（呼び出しはアプリ側のエントリで） ★
+// 起動時：期限切れの残骸をクリア（呼び出しはアプリ側のエントリで）
 export function initAuthOnBoot() {
   if (!getStoredToken() || isAccessTokenExpired()) {
     hardSignOut();
@@ -55,7 +55,7 @@ export class ApiError extends Error {
 type ApiFetchInit = {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
-  token?: string | null; // 未指定ならストレージの有効トークンを自動採用 ★
+  token?: string | null; // 未指定ならストレージの有効トークンを自動採用
   // 内部用：リフレッシュ後の再試行フラグ
   _retry?: boolean;
 };
@@ -102,7 +102,7 @@ export async function apiFetch<T>(
   path: string,
   init: ApiFetchInit = {}
 ): Promise<T> {
-  // token 未指定なら保存済みの有効トークンを自動採用 ★
+  // token 未指定なら保存済みの有効トークンを自動採用
   const token =
     init.token ?? (isAccessTokenExpired() ? null : getStoredToken());
   const { _retry, ...rest } = { ...init, token };
@@ -124,7 +124,7 @@ export async function apiFetch<T>(
         return (await rawFetch(path, {
           ...rest,
           token: r.token,
-          _retry: true, // 無限ループ抑止（念のため） ★
+          _retry: true, // 無限ループ抑止（念のため）
         })) as T;
       } catch (refreshErr) {
         // リフレッシュ失敗：認証状態をクリアして通知し、元の 401 を投げる ★
@@ -148,11 +148,23 @@ export function login(params: { email: string; password: string }) {
 }
 
 export function fetchProjects(token?: string) {
-  // token を明示しなくても保存済み有効トークンを使う ★
+  // token を明示しなくても保存済み有効トークンを使う
   return apiFetch<any[]>("/projects", { token });
 }
 
 // ===（任意）明示サインアウト API 呼び出し用のヘルパー ★===
 export function signOutLocally() {
   hardSignOut();
+}
+//　新規登録
+export function register(params: {
+  name: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+}) {
+  return apiFetch<LoginResponse>("/users", {
+    method: "POST",
+    body: { user: params },
+  });
 }
