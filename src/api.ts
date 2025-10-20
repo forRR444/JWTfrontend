@@ -237,6 +237,12 @@ export function getMealSummaryByDate(date: string) {
   );
 }
 
+export function getMealSummaryByRange(from: string, to: string) {
+  return apiFetch<MealGroups>(
+    `/meals/summary?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`
+  );
+}
+
 export function getCalendarMonth(month: string) {
   // month: "YYYY-MM"
   return apiFetch<{

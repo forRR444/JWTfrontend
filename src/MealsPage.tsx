@@ -7,7 +7,7 @@ import {
   refreshToken,
   type Meal,
 } from "./api";
-import { getMealSummaryByDate, getCalendarMonth, type MealGroups } from "./api";
+import { getMealSummaryByDate, getMealSummaryByRange, getCalendarMonth, type MealGroups } from "./api";
 import { clearAuth } from "./auth";
 
 const MEAL_TYPES: Meal["meal_type"][] = [
@@ -18,12 +18,17 @@ const MEAL_TYPES: Meal["meal_type"][] = [
   "other",
 ];
 
+type ViewMode = "day" | "week" | "month";
+
 export default function MealsPage() {
   const navigate = useNavigate();
 
   const [meals, setMeals] = useState<Meal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // view mode
+  const [viewMode, setViewMode] = useState<ViewMode>("day");
 
   // form state
   const [content, setContent] = useState(""); // 必須
@@ -38,61 +43,72 @@ export default function MealsPage() {
     return `${d.getFullYear()}-${mm}-${dd}`;
   });
   const [groups, setGroups] = useState<MealGroups["groups"] | null>(null);
-  const [monthStat, setMonthStat] = useState<Record<
-    string,
-    { total: number }
-  > | null>(null);
+  const [allMealsInRange, setAllMealsInRange] = useState<Meal[]>([]); // 週・月ビュー用
 
-  const refresh = async () => {
-    try {
-      setLoading(true);
-      const data = await listMeals();
-      setMeals(data);
-      setError(null);
-    } catch (e: any) {
-      setError(e?.message || "取得に失敗しました");
-    } finally {
-      setLoading(false);
-    }
+  // 週の開始日（月曜）と終了日（日曜）を計算
+  const getWeekRange = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const day = date.getDay(); // 0=日, 1=月, ..., 6=土
+    const diff = day === 0 ? -6 : 1 - day; // 月曜を週の始まりとする
+
+    const monday = new Date(date);
+    monday.setDate(date.getDate() + diff);
+
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+
+    const format = (d: Date) => {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${dd}`;
+    };
+
+    return { from: format(monday), to: format(sunday) };
   };
 
-  useEffect(() => {
-    refresh();
-  }, []);
+  // 月の開始日と終了日を計算
+  const getMonthRange = (dateStr: string) => {
+    const [year, month] = dateStr.split("-");
+    const firstDay = `${year}-${month}-01`;
+    const lastDay = new Date(parseInt(year), parseInt(month), 0);
+    const lastDayStr = `${year}-${month}-${String(lastDay.getDate()).padStart(2, "0")}`;
+    return { from: firstDay, to: lastDayStr };
+  };
 
-  // 初期表示：当日のサマリ
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await getMealSummaryByDate(selectedDate);
-        setGroups(res.groups);
-        // ついでに月統計（バッジ表示などに使える）
-        const month = selectedDate.slice(0, 7);
-        const cal = await getCalendarMonth(month);
-        const compact = Object.fromEntries(
-          Object.entries(cal.days).map(([d, v]) => [d, { total: v.total }])
-        );
-        setMonthStat(compact);
-      } catch (e) {
-        console.error(e);
-        setGroups(null);
-      }
-    })();
-  }, []); // 初回のみ
-
-  // 指定した日付の食事を取得
-  const handleShowByDate = async (dateToShow?: string) => {
-    const targetDate = dateToShow || selectedDate;
+  // ビューモードに応じたデータ取得
+  const loadDataForView = async (mode: ViewMode, dateStr: string) => {
     setLoading(true);
     try {
-      const res = await getMealSummaryByDate(targetDate);
-      setGroups(res.groups);
-      const month = targetDate.slice(0, 7);
-      const cal = await getCalendarMonth(month);
-      const compact = Object.fromEntries(
-        Object.entries(cal.days).map(([d, v]) => [d, { total: v.total }])
-      );
-      setMonthStat(compact);
+      if (mode === "day") {
+        const res = await getMealSummaryByDate(dateStr);
+        setGroups(res.groups);
+        setAllMealsInRange([]);
+      } else if (mode === "week") {
+        const range = getWeekRange(dateStr);
+        const res = await getMealSummaryByRange(range.from, range.to);
+        setGroups(res.groups);
+        // 週ビュー用に全食事を日付順でリスト化
+        const allMeals = Object.values(res.groups).flat();
+        allMeals.sort((a, b) => {
+          const dateA = a.eaten_on || "";
+          const dateB = b.eaten_on || "";
+          return dateA.localeCompare(dateB);
+        });
+        setAllMealsInRange(allMeals);
+      } else if (mode === "month") {
+        const range = getMonthRange(dateStr);
+        const res = await getMealSummaryByRange(range.from, range.to);
+        setGroups(res.groups);
+        // 月ビュー用に全食事を日付順でリスト化
+        const allMeals = Object.values(res.groups).flat();
+        allMeals.sort((a, b) => {
+          const dateA = a.eaten_on || "";
+          const dateB = b.eaten_on || "";
+          return dateA.localeCompare(dateB);
+        });
+        setAllMealsInRange(allMeals);
+      }
       setError("");
     } catch (e: any) {
       setError(e?.message || "取得に失敗しました");
@@ -100,6 +116,16 @@ export default function MealsPage() {
       setLoading(false);
     }
   };
+
+  // 初期表示
+  useEffect(() => {
+    loadDataForView(viewMode, selectedDate);
+  }, []);
+
+  // ビューモードまたは日付が変更されたら再読み込み
+  useEffect(() => {
+    loadDataForView(viewMode, selectedDate);
+  }, [viewMode, selectedDate]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,8 +153,8 @@ export default function MealsPage() {
       setGrams("");
       setTags("");
       setError(null);
-      // 追加後、現在選択中の日付のサマリーを再取得
-      await handleShowByDate(selectedDate);
+      // 追加後、現在のビューを再取得
+      await loadDataForView(viewMode, selectedDate);
     } catch (e: any) {
       setError(e?.message || "作成に失敗しました");
     }
@@ -139,8 +165,8 @@ export default function MealsPage() {
     try {
       await deleteMeal(id);
       setMeals(meals.filter((m) => m.id !== id));
-      // 削除後、現在選択中の日付のサマリーを再取得
-      await handleShowByDate(selectedDate);
+      // 削除後、現在のビューを再取得
+      await loadDataForView(viewMode, selectedDate);
     } catch (e: any) {
       alert(e?.message || "削除に失敗しました");
     }
@@ -175,6 +201,19 @@ export default function MealsPage() {
     "other",
   ] as const;
 
+  const getViewRangeLabel = () => {
+    if (viewMode === "day") {
+      return selectedDate;
+    } else if (viewMode === "week") {
+      const range = getWeekRange(selectedDate);
+      return `${range.from} 〜 ${range.to}`;
+    } else if (viewMode === "month") {
+      const [year, month] = selectedDate.split("-");
+      return `${year}年${parseInt(month)}月`;
+    }
+    return "";
+  };
+
   return (
     <div style={{ maxWidth: 720, margin: "32px auto", padding: 16 }}>
       <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
@@ -185,7 +224,58 @@ export default function MealsPage() {
         </div>
       </div>
 
-      {/* date selector */}
+      {/* ビュー切替ボタン */}
+      <div
+        style={{
+          display: "flex",
+          gap: 8,
+          marginBottom: 16,
+          borderBottom: "2px solid #ddd",
+          paddingBottom: 8,
+        }}
+      >
+        <button
+          onClick={() => setViewMode("day")}
+          style={{
+            padding: "8px 16px",
+            borderRadius: 6,
+            border: viewMode === "day" ? "2px solid #4a90e2" : "1px solid #ddd",
+            backgroundColor: viewMode === "day" ? "#e3f2fd" : "white",
+            fontWeight: viewMode === "day" ? "bold" : "normal",
+            cursor: "pointer",
+          }}
+        >
+          日
+        </button>
+        <button
+          onClick={() => setViewMode("week")}
+          style={{
+            padding: "8px 16px",
+            borderRadius: 6,
+            border: viewMode === "week" ? "2px solid #4a90e2" : "1px solid #ddd",
+            backgroundColor: viewMode === "week" ? "#e3f2fd" : "white",
+            fontWeight: viewMode === "week" ? "bold" : "normal",
+            cursor: "pointer",
+          }}
+        >
+          週
+        </button>
+        <button
+          onClick={() => setViewMode("month")}
+          style={{
+            padding: "8px 16px",
+            borderRadius: 6,
+            border: viewMode === "month" ? "2px solid #4a90e2" : "1px solid #ddd",
+            backgroundColor: viewMode === "month" ? "#e3f2fd" : "white",
+            fontWeight: viewMode === "month" ? "bold" : "normal",
+            cursor: "pointer",
+          }}
+        >
+          月
+        </button>
+      </div>
+
+      {/* 日付選択と表示範囲 */}
       <div
         style={{
           display: "flex",
@@ -198,42 +288,13 @@ export default function MealsPage() {
           type="date"
           value={selectedDate}
           onChange={(e) => {
-            const newDate = e.target.value;
-            setSelectedDate(newDate);
-            handleShowByDate(newDate);
+            setSelectedDate(e.target.value);
           }}
         />
+        <span style={{ fontSize: "0.9em", color: "#666" }}>
+          表示範囲: {getViewRangeLabel()}
+        </span>
       </div>
-
-      {/* mini calendar (day buttons with counts) */}
-      {monthStat && (
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 6,
-            marginBottom: 16,
-          }}
-        >
-          {Object.entries(monthStat).map(([d, v]) => (
-            <button
-              key={d}
-              onClick={() => {
-                setSelectedDate(d);
-                handleShowByDate(d);
-              }}
-              style={{
-                padding: "4px 8px",
-                borderRadius: 6,
-                border: "1px solid #ddd",
-              }}
-              title={`${d} の記録 ${v.total} 件`}
-            >
-              {d.slice(-2)}日 {v.total > 0 ? `(${v.total})` : ""}
-            </button>
-          ))}
-        </div>
-      )}
 
       {/* form */}
       <form
@@ -297,7 +358,7 @@ export default function MealsPage() {
         <button type="submit">追加</button>
       </form>
 
-      {/* groups rendering from /meals/summary */}
+      {/* データ表示エリア */}
       {loading ? (
         <p>読み込み中...</p>
       ) : error ? (
@@ -314,6 +375,10 @@ export default function MealsPage() {
               0
             );
 
+            const rangeLabel = viewMode === "day"
+              ? selectedDate
+              : getViewRangeLabel();
+
             return totalCalories > 0 ? (
               <div
                 style={{
@@ -329,68 +394,127 @@ export default function MealsPage() {
                   総カロリー: {totalCalories} kcal
                 </h3>
                 <p style={{ margin: 0, fontSize: "0.9em", color: "#666" }}>
-                  {selectedDate} の合計
+                  {rangeLabel} の合計
                 </p>
               </div>
             ) : null;
           })()}
 
-          {MEAL_TYPES_ORDER.map((type) => {
-            const items = groups[type] || [];
-            if (items.length === 0) return null;
+          {viewMode === "day" ? (
+            // 日ビュー: 食事タイプ別にグループ表示
+            <>
+              {MEAL_TYPES_ORDER.map((type) => {
+                const items = groups[type] || [];
+                if (items.length === 0) return null;
 
-            // 各タイプの小計カロリー
-            const subtotalCalories = items.reduce(
-              (sum, m) => sum + (m.calories || 0),
-              0
-            );
+                const subtotalCalories = items.reduce(
+                  (sum, m) => sum + (m.calories || 0),
+                  0
+                );
 
-            // タイプの日本語表示
-            const typeLabels: Record<string, string> = {
-              breakfast: "朝食",
-              lunch: "昼食",
-              dinner: "夕食",
-              snack: "間食",
-              other: "その他",
-            };
+                const typeLabels: Record<string, string> = {
+                  breakfast: "朝食",
+                  lunch: "昼食",
+                  dinner: "夕食",
+                  snack: "間食",
+                  other: "その他",
+                };
 
-            return (
-              <section
-                key={type}
-                style={{
-                  border: "1px solid #ddd",
-                  borderRadius: 8,
-                  padding: 12,
-                  marginBottom: 16,
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: 8,
-                  }}
-                >
-                  <h3 style={{ margin: 0, textTransform: "capitalize" }}>
-                    {typeLabels[type] || type}
-                  </h3>
-                  {subtotalCalories > 0 && (
-                    <span
+                return (
+                  <section
+                    key={type}
+                    style={{
+                      border: "1px solid #ddd",
+                      borderRadius: 8,
+                      padding: 12,
+                      marginBottom: 16,
+                    }}
+                  >
+                    <div
                       style={{
-                        backgroundColor: "#ffe4b5",
-                        padding: "4px 12px",
-                        borderRadius: 12,
-                        fontSize: "0.9em",
-                        fontWeight: "bold",
-                        color: "#d97706",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: 8,
                       }}
                     >
-                      小計: {subtotalCalories} kcal
-                    </span>
-                  )}
-                </div>
+                      <h3 style={{ margin: 0 }}>
+                        {typeLabels[type] || type}
+                      </h3>
+                      {subtotalCalories > 0 && (
+                        <span
+                          style={{
+                            backgroundColor: "#ffe4b5",
+                            padding: "4px 12px",
+                            borderRadius: 12,
+                            fontSize: "0.9em",
+                            fontWeight: "bold",
+                            color: "#d97706",
+                          }}
+                        >
+                          小計: {subtotalCalories} kcal
+                        </span>
+                      )}
+                    </div>
 
+                    <ul
+                      style={{
+                        listStyle: "none",
+                        padding: 0,
+                        display: "grid",
+                        gap: 8,
+                      }}
+                    >
+                      {items.map((m) => (
+                        <li
+                          key={m.id}
+                          style={{
+                            border: "1px solid #eee",
+                            borderRadius: 8,
+                            padding: 12,
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                            }}
+                          >
+                            <strong>{m.content}</strong>
+                            <button onClick={() => onDelete(m.id)}>削除</button>
+                          </div>
+                          <small>
+                            kcal: {m.calories ?? "-"} / g: {m.grams ?? "-"}
+                          </small>
+                          {m.tags && m.tags.length > 0 && (
+                            <div>タグ: {m.tags.join(", ")}</div>
+                          )}
+                          <small>
+                            記録日時: {new Date(m.created_at).toLocaleString()}
+                          </small>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                );
+              })}
+            </>
+          ) : (
+            // 週・月ビュー: 日付順のリスト表示
+            <div
+              style={{
+                border: "1px solid #ddd",
+                borderRadius: 8,
+                padding: 12,
+                maxHeight: "600px",
+                overflowY: "auto",
+              }}
+            >
+              <h3 style={{ marginTop: 0 }}>
+                {viewMode === "week" ? "週間" : "月間"}食事リスト
+              </h3>
+              {allMealsInRange.length > 0 ? (
                 <ul
                   style={{
                     listStyle: "none",
@@ -399,41 +523,77 @@ export default function MealsPage() {
                     gap: 8,
                   }}
                 >
-                  {items.map((m) => (
-                    <li
-                      key={m.id}
-                      style={{
-                        border: "1px solid #eee",
-                        borderRadius: 8,
-                        padding: 12,
-                      }}
-                    >
-                      <div
+                  {allMealsInRange.map((m) => {
+                    const typeLabels: Record<string, string> = {
+                      breakfast: "朝食",
+                      lunch: "昼食",
+                      dinner: "夕食",
+                      snack: "間食",
+                      other: "その他",
+                    };
+
+                    return (
+                      <li
+                        key={m.id}
                         style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
+                          border: "1px solid #eee",
+                          borderRadius: 8,
+                          padding: 12,
                         }}
                       >
-                        <strong>{m.content}</strong>
-                        <button onClick={() => onDelete(m.id)}>削除</button>
-                      </div>
-                      <small>
-                        kcal: {m.calories ?? "-"} / g: {m.grams ?? "-"}
-                      </small>
-                      {m.tags && m.tags.length > 0 && (
-                        <div>タグ: {m.tags.join(", ")}</div>
-                      )}
-                      <small>
-                        食べた日: {m.eaten_on} / 記録日時:{" "}
-                        {new Date(m.created_at).toLocaleString()}
-                      </small>
-                    </li>
-                  ))}
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            marginBottom: 4,
+                          }}
+                        >
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                              <strong style={{ fontSize: "0.9em", color: "#666" }}>
+                                {m.eaten_on}
+                              </strong>
+                              <span
+                                style={{
+                                  backgroundColor: "#e3f2fd",
+                                  padding: "2px 8px",
+                                  borderRadius: 4,
+                                  fontSize: "0.75em",
+                                  color: "#2c5aa0",
+                                }}
+                              >
+                                {typeLabels[m.meal_type] || m.meal_type}
+                              </span>
+                            </div>
+                            <div style={{ marginTop: 4 }}>
+                              <strong>{m.content}</strong>
+                            </div>
+                            <small>
+                              kcal: {m.calories ?? "-"} / g: {m.grams ?? "-"}
+                            </small>
+                            {m.tags && m.tags.length > 0 && (
+                              <div style={{ fontSize: "0.85em" }}>
+                                タグ: {m.tags.join(", ")}
+                              </div>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => onDelete(m.id)}
+                            style={{ marginLeft: 8 }}
+                          >
+                            削除
+                          </button>
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
-              </section>
-            );
-          })}
+              ) : (
+                <p style={{ color: "#999" }}>この期間の記録はありません</p>
+              )}
+            </div>
+          )}
         </>
       ) : (
         <p>データがありません</p>
