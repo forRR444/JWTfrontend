@@ -177,6 +177,7 @@ export interface Meal {
   calories?: number | null;
   grams?: number | null;
   tags: string[];
+  eaten_on: string;
   created_at: string;
   updated_at: string;
 }
@@ -195,6 +196,7 @@ export function createMeal(
       calories: meal.calories,
       grams: meal.grams,
       tags: meal.tags || [],
+      eaten_on: meal.eaten_on,
     },
   };
   return apiFetch<Meal>("/meals", { method: "POST", body: payload });
@@ -208,6 +210,7 @@ export function updateMeal(id: number, meal: Partial<Meal>) {
       calories: meal.calories,
       grams: meal.grams,
       tags: meal.tags,
+      eaten_on: meal.eaten_on,
     },
   };
   return apiFetch<Meal>(`/meals/${id}`, { method: "PATCH", body: payload });
@@ -215,4 +218,29 @@ export function updateMeal(id: number, meal: Partial<Meal>) {
 
 export function deleteMeal(id: number) {
   return apiFetch<void>(`/meals/${id}`, { method: "DELETE" });
+}
+
+export type MealGroups = {
+  range: { date?: string | null; from?: string | null; to?: string | null };
+  groups: {
+    breakfast: Meal[];
+    lunch: Meal[];
+    dinner: Meal[];
+    snack: Meal[];
+    other: Meal[];
+  };
+};
+
+export function getMealSummaryByDate(date: string) {
+  return apiFetch<MealGroups>(
+    `/meals/summary?date=${encodeURIComponent(date)}`
+  );
+}
+
+export function getCalendarMonth(month: string) {
+  // month: "YYYY-MM"
+  return apiFetch<{
+    month: string;
+    days: Record<string, { total: number; by_type: Record<string, number> }>;
+  }>(`/meals/calendar?month=${encodeURIComponent(month)}`);
 }
