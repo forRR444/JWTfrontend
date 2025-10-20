@@ -3,11 +3,10 @@ import { useNavigate } from "react-router-dom";
 import {
   createMeal,
   deleteMeal,
-  listMeals,
   refreshToken,
   type Meal,
 } from "./api";
-import { getMealSummaryByDate, getMealSummaryByRange, getCalendarMonth, type MealGroups } from "./api";
+import { getMealSummaryByDate, getMealSummaryByRange, type MealGroups } from "./api";
 import { clearAuth } from "./auth";
 
 const MEAL_TYPES: Meal["meal_type"][] = [
@@ -17,6 +16,14 @@ const MEAL_TYPES: Meal["meal_type"][] = [
   "snack",
   "other",
 ];
+
+const MEAL_TYPE_LABELS: Record<Meal["meal_type"], string> = {
+  breakfast: "朝食",
+  lunch: "昼食",
+  dinner: "夕食",
+  snack: "間食",
+  other: "その他",
+};
 
 type ViewMode = "day" | "week" | "month";
 
@@ -214,6 +221,72 @@ export default function MealsPage() {
     return "";
   };
 
+  const getTodayString = () => {
+    const d = new Date();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${d.getFullYear()}-${mm}-${dd}`;
+  };
+
+  const goToToday = () => {
+    setSelectedDate(getTodayString());
+  };
+
+  const isShowingToday = () => {
+    const today = getTodayString();
+    if (viewMode === "day") {
+      // 日ビュー: 今日を選択しているか
+      return selectedDate === today;
+    } else if (viewMode === "week") {
+      // 週ビュー: 今日を含む週を表示しているか
+      const range = getWeekRange(today);
+      const selectedRange = getWeekRange(selectedDate);
+      return range.from === selectedRange.from && range.to === selectedRange.to;
+    } else if (viewMode === "month") {
+      // 月ビュー: 今日を含む月を表示しているか
+      const todayMonth = today.slice(0, 7); // YYYY-MM
+      const selectedMonth = selectedDate.slice(0, 7);
+      return todayMonth === selectedMonth;
+    }
+    return false;
+  };
+
+  const goToPrevious = () => {
+    const date = new Date(selectedDate);
+    if (viewMode === "day") {
+      // 1日前
+      date.setDate(date.getDate() - 1);
+    } else if (viewMode === "week") {
+      // 1週間前
+      date.setDate(date.getDate() - 7);
+    } else if (viewMode === "month") {
+      // 1ヶ月前
+      date.setMonth(date.getMonth() - 1);
+    }
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    setSelectedDate(`${y}-${m}-${d}`);
+  };
+
+  const goToNext = () => {
+    const date = new Date(selectedDate);
+    if (viewMode === "day") {
+      // 1日後
+      date.setDate(date.getDate() + 1);
+    } else if (viewMode === "week") {
+      // 1週間後
+      date.setDate(date.getDate() + 7);
+    } else if (viewMode === "month") {
+      // 1ヶ月後
+      date.setMonth(date.getMonth() + 1);
+    }
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    setSelectedDate(`${y}-${m}-${d}`);
+  };
+
   return (
     <div style={{ maxWidth: 720, margin: "32px auto", padding: 16 }}>
       <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
@@ -291,6 +364,52 @@ export default function MealsPage() {
             setSelectedDate(e.target.value);
           }}
         />
+        <div style={{ display: "flex", gap: 4 }}>
+          <button
+            onClick={goToPrevious}
+            title={viewMode === "day" ? "前の日" : viewMode === "week" ? "前の週" : "前の月"}
+            style={{
+              padding: "6px 12px",
+              borderRadius: 6,
+              border: "1px solid #ccc",
+              backgroundColor: "white",
+              cursor: "pointer",
+              fontSize: "1em",
+            }}
+          >
+            ←
+          </button>
+          <button
+            onClick={goToToday}
+            disabled={isShowingToday()}
+            style={{
+              padding: "6px 12px",
+              borderRadius: 6,
+              border: isShowingToday() ? "2px solid #4a90e2" : "1px solid #ccc",
+              backgroundColor: isShowingToday() ? "#e3f2fd" : "white",
+              color: isShowingToday() ? "#2c5aa0" : "#333",
+              cursor: isShowingToday() ? "default" : "pointer",
+              fontWeight: isShowingToday() ? "bold" : "500",
+              opacity: isShowingToday() ? 0.7 : 1,
+            }}
+          >
+            今日
+          </button>
+          <button
+            onClick={goToNext}
+            title={viewMode === "day" ? "次の日" : viewMode === "week" ? "次の週" : "次の月"}
+            style={{
+              padding: "6px 12px",
+              borderRadius: 6,
+              border: "1px solid #ccc",
+              backgroundColor: "white",
+              cursor: "pointer",
+              fontSize: "1em",
+            }}
+          >
+            →
+          </button>
+        </div>
         <span style={{ fontSize: "0.9em", color: "#666" }}>
           表示範囲: {getViewRangeLabel()}
         </span>
@@ -309,7 +428,7 @@ export default function MealsPage() {
           >
             {MEAL_TYPES.map((mt) => (
               <option key={mt} value={mt}>
-                {mt}
+                {MEAL_TYPE_LABELS[mt]}
               </option>
             ))}
           </select>
@@ -412,14 +531,6 @@ export default function MealsPage() {
                   0
                 );
 
-                const typeLabels: Record<string, string> = {
-                  breakfast: "朝食",
-                  lunch: "昼食",
-                  dinner: "夕食",
-                  snack: "間食",
-                  other: "その他",
-                };
-
                 return (
                   <section
                     key={type}
@@ -439,7 +550,7 @@ export default function MealsPage() {
                       }}
                     >
                       <h3 style={{ margin: 0 }}>
-                        {typeLabels[type] || type}
+                        {MEAL_TYPE_LABELS[type] || type}
                       </h3>
                       {subtotalCalories > 0 && (
                         <span
@@ -524,14 +635,6 @@ export default function MealsPage() {
                   }}
                 >
                   {allMealsInRange.map((m) => {
-                    const typeLabels: Record<string, string> = {
-                      breakfast: "朝食",
-                      lunch: "昼食",
-                      dinner: "夕食",
-                      snack: "間食",
-                      other: "その他",
-                    };
-
                     return (
                       <li
                         key={m.id}
@@ -563,7 +666,7 @@ export default function MealsPage() {
                                   color: "#2c5aa0",
                                 }}
                               >
-                                {typeLabels[m.meal_type] || m.meal_type}
+                                {MEAL_TYPE_LABELS[m.meal_type] || m.meal_type}
                               </span>
                             </div>
                             <div style={{ marginTop: 4 }}>
