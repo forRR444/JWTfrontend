@@ -80,13 +80,14 @@ export default function MealsPage() {
     })();
   }, []); // 初回のみ
 
-  // 「表示」ボタン
-  const handleShowByDate = async () => {
+  // 指定した日付の食事を取得
+  const handleShowByDate = async (dateToShow?: string) => {
+    const targetDate = dateToShow || selectedDate;
     setLoading(true);
     try {
-      const res = await getMealSummaryByDate(selectedDate);
+      const res = await getMealSummaryByDate(targetDate);
       setGroups(res.groups);
-      const month = selectedDate.slice(0, 7);
+      const month = targetDate.slice(0, 7);
       const cal = await getCalendarMonth(month);
       const compact = Object.fromEntries(
         Object.entries(cal.days).map(([d, v]) => [d, { total: v.total }])
@@ -126,6 +127,8 @@ export default function MealsPage() {
       setGrams("");
       setTags("");
       setError(null);
+      // 追加後、現在選択中の日付のサマリーを再取得
+      await handleShowByDate(selectedDate);
     } catch (e: any) {
       setError(e?.message || "作成に失敗しました");
     }
@@ -136,6 +139,8 @@ export default function MealsPage() {
     try {
       await deleteMeal(id);
       setMeals(meals.filter((m) => m.id !== id));
+      // 削除後、現在選択中の日付のサマリーを再取得
+      await handleShowByDate(selectedDate);
     } catch (e: any) {
       alert(e?.message || "削除に失敗しました");
     }
@@ -180,7 +185,7 @@ export default function MealsPage() {
         </div>
       </div>
 
-      {/* date selector + show button */}
+      {/* date selector */}
       <div
         style={{
           display: "flex",
@@ -192,9 +197,12 @@ export default function MealsPage() {
         <input
           type="date"
           value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
+          onChange={(e) => {
+            const newDate = e.target.value;
+            setSelectedDate(newDate);
+            handleShowByDate(newDate);
+          }}
         />
-        <button onClick={handleShowByDate}>表示</button>
       </div>
 
       {/* mini calendar (day buttons with counts) */}
@@ -212,7 +220,7 @@ export default function MealsPage() {
               key={d}
               onClick={() => {
                 setSelectedDate(d);
-                handleShowByDate();
+                handleShowByDate(d);
               }}
               style={{
                 padding: "4px 8px",
@@ -296,9 +304,55 @@ export default function MealsPage() {
         <p style={{ color: "crimson" }}>{error}</p>
       ) : groups ? (
         <>
+          {/* 総カロリー計算 */}
+          {(() => {
+            const allMeals = MEAL_TYPES_ORDER.flatMap(
+              (type) => groups[type] || []
+            );
+            const totalCalories = allMeals.reduce(
+              (sum, m) => sum + (m.calories || 0),
+              0
+            );
+
+            return totalCalories > 0 ? (
+              <div
+                style={{
+                  backgroundColor: "#f0f8ff",
+                  border: "2px solid #4a90e2",
+                  borderRadius: 8,
+                  padding: 16,
+                  marginBottom: 20,
+                  textAlign: "center",
+                }}
+              >
+                <h3 style={{ margin: "0 0 8px 0", color: "#2c5aa0" }}>
+                  総カロリー: {totalCalories} kcal
+                </h3>
+                <p style={{ margin: 0, fontSize: "0.9em", color: "#666" }}>
+                  {selectedDate} の合計
+                </p>
+              </div>
+            ) : null;
+          })()}
+
           {MEAL_TYPES_ORDER.map((type) => {
             const items = groups[type] || [];
             if (items.length === 0) return null;
+
+            // 各タイプの小計カロリー
+            const subtotalCalories = items.reduce(
+              (sum, m) => sum + (m.calories || 0),
+              0
+            );
+
+            // タイプの日本語表示
+            const typeLabels: Record<string, string> = {
+              breakfast: "朝食",
+              lunch: "昼食",
+              dinner: "夕食",
+              snack: "間食",
+              other: "その他",
+            };
 
             return (
               <section
@@ -310,9 +364,32 @@ export default function MealsPage() {
                   marginBottom: 16,
                 }}
               >
-                <h3 style={{ marginTop: 0, textTransform: "capitalize" }}>
-                  {type}
-                </h3>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 8,
+                  }}
+                >
+                  <h3 style={{ margin: 0, textTransform: "capitalize" }}>
+                    {typeLabels[type] || type}
+                  </h3>
+                  {subtotalCalories > 0 && (
+                    <span
+                      style={{
+                        backgroundColor: "#ffe4b5",
+                        padding: "4px 12px",
+                        borderRadius: 12,
+                        fontSize: "0.9em",
+                        fontWeight: "bold",
+                        color: "#d97706",
+                      }}
+                    >
+                      小計: {subtotalCalories} kcal
+                    </span>
+                  )}
+                </div>
 
                 <ul
                   style={{
@@ -363,5 +440,4 @@ export default function MealsPage() {
       )}
     </div>
   );
-  // ここでコンポーネント関数の波括弧を閉じる
 }
