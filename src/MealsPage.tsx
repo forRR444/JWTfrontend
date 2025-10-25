@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { createMeal, deleteMeal, updateMeal, refreshToken, fetchMe } from "./api";
+import {
+  createMeal,
+  deleteMeal,
+  updateMeal,
+  refreshToken,
+  fetchMe,
+} from "./api";
 import { clearAuth } from "./auth";
 import type { User } from "./types";
 import type { ViewMode } from "./utils/dateUtils";
@@ -24,14 +30,19 @@ import { AppNavigation } from "./components/AppNavigation";
 import styles from "./styles/app.module.css";
 import mealStyles from "./styles/meals.module.css";
 
+/**
+ * 食事ダッシュボード
+ * - 日/週/月ビューで食事データを表示・CRUD
+ * - 日次ビューのみ栄養サマリーと入力フォームを表示
+ */
 export default function MealsPage() {
   const navigate = useNavigate();
 
-  // ビュー状態
+  // 表示モード & 日付（ナビゲーションの基準）
   const [viewMode, setViewMode] = useState<ViewMode>("day");
   const [selectedDate, setSelectedDate] = useState<string>(getTodayString());
 
-  // ユーザー状態
+  // ユーザー & 目標設定モーダル
   const [user, setUser] = useState<User | null>(null);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
 
@@ -41,21 +52,21 @@ export default function MealsPage() {
     selectedDate
   );
 
-  // ユーザー情報を取得
+  // マイプロフィールの取得（目標値などでサマリーに利用）
   useEffect(() => {
     fetchMe()
       .then((userData) => setUser(userData))
       .catch((err) => console.error("Failed to fetch user:", err));
   }, []);
 
-  // ログアウト処理
+  // ログアウト：認証情報をクリアし、他タブへも通知
   const handleLogoutClick = () => {
     clearAuth();
     window.dispatchEvent(new Event("unauthorized"));
     navigate("/login", { replace: true });
   };
 
-  // トークン更新処理
+  // 手動リフレッシュ
   const handleRefreshToken = async () => {
     try {
       await refreshToken();
@@ -65,13 +76,12 @@ export default function MealsPage() {
     }
   };
 
-  // 食事追加処理
+  // 追加 / 削除 / 更新：成功時は一覧再取得のみ（ロジックはAPI層へ委譲）
   const handleMealSubmit = async (mealData: any) => {
     await createMeal(mealData);
     refetch();
   };
 
-  // 食事削除処理
   const handleMealDelete = async (id: number) => {
     if (!confirm("削除しますか？")) return;
 
@@ -83,7 +93,6 @@ export default function MealsPage() {
     }
   };
 
-  // 食事更新処理
   const handleMealUpdate = async (id: number, data: any) => {
     try {
       await updateMeal(id, data);
@@ -124,7 +133,9 @@ export default function MealsPage() {
           viewRangeLabel={getViewRangeLabel(viewMode, selectedDate)}
           isShowingToday={isShowingToday(viewMode, selectedDate)}
           onDateChange={setSelectedDate}
-          onPrevious={() => setSelectedDate(getPreviousDate(viewMode, selectedDate))}
+          onPrevious={() =>
+            setSelectedDate(getPreviousDate(viewMode, selectedDate))
+          }
           onToday={() => setSelectedDate(getTodayString())}
           onNext={() => setSelectedDate(getNextDate(viewMode, selectedDate))}
         />

@@ -1,8 +1,6 @@
 // デバッグ用のヘルパー関数
 
-/**
- * 現在のトークン情報を表示
- */
+/** ローカルストレージ内のトークン情報を表示 */
 export function showTokenInfo() {
   const token = localStorage.getItem("access_token");
   const expires = localStorage.getItem("access_token_expires");
@@ -34,9 +32,7 @@ export function showTokenInfo() {
   }
 }
 
-/**
- * Cookie情報を表示
- */
+/** Cookie内のリフレッシュトークン有無を確認 */
 export function showCookieInfo() {
   const cookies = document.cookie.split(";").map((c) => c.trim());
   const refreshTokenCookie = cookies.find((c) =>
@@ -54,9 +50,7 @@ export function showCookieInfo() {
   }
 }
 
-/**
- * 次の自動更新までの時間を計算
- */
+/** 次のトークン自動更新予定時刻を表示 */
 export function showNextRefreshTime() {
   const expires = localStorage.getItem("access_token_expires");
   if (!expires) {
@@ -67,8 +61,6 @@ export function showNextRefreshTime() {
   const expiresNum = parseInt(expires, 10);
   const nowSec = Math.floor(Date.now() / 1000);
   const secondsUntilExpiry = expiresNum - nowSec;
-
-  // api.ts と同じロジック
   const refreshBeforeExpiry = secondsUntilExpiry > 120 ? 60 : 30;
   const secondsUntilRefresh = secondsUntilExpiry - refreshBeforeExpiry;
 
@@ -85,9 +77,7 @@ export function showNextRefreshTime() {
   }
 }
 
-/**
- * すべての情報を表示
- */
+/** 認証関連情報をまとめて表示 */
 export function debugAuth() {
   console.log("認証情報の完全チェック");
   console.log("");

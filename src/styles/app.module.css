@@ -1,6 +1,5 @@
 /*
  * アプリ全体の共通スタイル
- * シンプルで実務向き / 落ち着いた中立トーン / 読みやすさ優先
  */
 
 /* ページコンテナ */
@@ -104,7 +103,7 @@
   line-height: 1.6;
 }
 
-/* ボタン - プライマリ */
+/* ボタン (プライマリ) */
 .button {
   padding: 10px 16px;
   font-size: 14px;
@@ -131,7 +130,7 @@
   cursor: not-allowed;
 }
 
-/* ボタン - セカンダリ */
+/* ボタン (セカンダリ) */
 .buttonSecondary {
   padding: 10px 16px;
   font-size: 14px;
@@ -160,13 +159,13 @@
   cursor: not-allowed;
 }
 
-/* ボタン - 小サイズ */
+/* ボタン (小サイズ) */
 .buttonSmall {
   padding: 6px 12px;
   font-size: 13px;
 }
 
-/* ボタン - 危険操作 */
+/* ボタン (危険操作) */
 .buttonDanger {
   padding: 10px 16px;
   font-size: 14px;

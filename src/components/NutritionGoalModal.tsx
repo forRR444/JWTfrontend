@@ -1,6 +1,8 @@
 /**
- * 栄養目標設定モーダル
- * ユーザーの目標カロリーと3大栄養素を設定
+ * 栄養目標設定モーダルコンポーネント
+ * - ユーザーの1日あたりの目標カロリー・三大栄養素を入力・更新する
+ * - モーダル表示中は既存の目標値をフォームに反映
+ * - API経由で更新処理を行い、完了後に親コンポーネントへ反映
  */
 import React, { useState, useEffect } from "react";
 import type { User } from "../types";
@@ -154,12 +156,8 @@ export const NutritionGoalModal: React.FC<NutritionGoalModalProps> = ({
         </form>
 
         <div className={styles.modalHints}>
-          <p className={styles.modalHint}>
-            目標値は1日あたりの推奨摂取量です
-          </p>
-          <p className={styles.modalHint}>
-            空欄にすると目標は未設定になります
-          </p>
+          <p className={styles.modalHint}>目標値は1日あたりの推奨摂取量です</p>
+          <p className={styles.modalHint}>空欄にすると目標は未設定になります</p>
         </div>
       </div>
     </div>
