@@ -231,11 +231,6 @@ export function login(params: { email: string; password: string }) {
   });
 }
 
-export function fetchProjects(token?: string) {
-  // token を明示しなくても保存済み有効トークンを使う
-  return apiFetch<any[]>("/projects", { token });
-}
-
 // ===（任意）明示サインアウト API 呼び出し用のヘルパー ★===
 export function signOutLocally() {
   hardSignOut();
