@@ -118,7 +118,7 @@ export default function MealsPage() {
           <Link to="/me" className={styles.navLink}>
             マイページ
           </Link>
-          <Link to="/meals" className={`${styles.navLink} ${styles.navLinkActive}`}>
+          <Link to="/dashboard" className={`${styles.navLink} ${styles.navLinkActive}`}>
             食事管理
           </Link>
         </nav>
