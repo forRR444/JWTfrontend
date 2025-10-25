@@ -4,24 +4,36 @@
  */
 import React, { useState, useRef, useEffect } from "react";
 import type { Meal } from "../../api";
-import { MEAL_TYPE_LABELS, MEAL_TYPES_ORDER, MEAL_TYPES } from "../../constants/mealTypes";
+import {
+  MEAL_TYPE_LABELS,
+  MEAL_TYPES_ORDER,
+  MEAL_TYPES,
+} from "../../constants/mealTypes";
 import type { ViewMode } from "../../utils/dateUtils";
 import styles from "../../styles/meals.module.css";
 
 // タグごとの色定義
 const TAG_COLORS: Record<string, string> = {
-  外食: "#ef4444",      // 赤
-  自炊: "#22c55e",      // 緑
-  和食: "#f59e0b",      // オレンジ
-  洋食: "#3b82f6",      // 青
-  中華: "#dc2626",      // 濃い赤
-  韓国料理: "#ec4899",  // ピンク
-  イタリアン: "#10b981", // エメラルド
+  外食: "#ef4444",
+  自炊: "#22c55e",
+  和食: "#f59e0b",
+  洋食: "#3b82f6",
+  中華: "#dc2626",
+  韓国料理: "#ec4899",
+  イタリアン: "#10b981",
 };
 
-const DEFAULT_TAG_COLOR = "#6b7280"; // デフォルトはグレー
+const DEFAULT_TAG_COLOR = "#6b7280";
 
-const AVAILABLE_TAGS = ["外食", "自炊", "和食", "洋食", "中華", "韓国料理", "イタリアン"];
+const AVAILABLE_TAGS = [
+  "外食",
+  "自炊",
+  "和食",
+  "洋食",
+  "中華",
+  "韓国料理",
+  "イタリアン",
+];
 
 interface MealListViewProps {
   viewMode: ViewMode;
@@ -57,7 +69,14 @@ export const MealListView: React.FC<MealListViewProps> = ({
     return <DayView groups={groups} onDelete={onDelete} onUpdate={onUpdate} />;
   }
 
-  return <WeekMonthView viewMode={viewMode} allMealsInRange={allMealsInRange} onDelete={onDelete} onUpdate={onUpdate} />;
+  return (
+    <WeekMonthView
+      viewMode={viewMode}
+      allMealsInRange={allMealsInRange}
+      onDelete={onDelete}
+      onUpdate={onUpdate}
+    />
+  );
 };
 
 /**
@@ -87,7 +106,9 @@ const DayView: React.FC<{
         return (
           <section key={type} className={styles.mealSection}>
             <div className={styles.mealSectionHeader}>
-              <h3 className={styles.mealSectionTitle}>{MEAL_TYPE_LABELS[type] || type}</h3>
+              <h3 className={styles.mealSectionTitle}>
+                {MEAL_TYPE_LABELS[type] || type}
+              </h3>
               {subtotalCalories > 0 && (
                 <span className={styles.mealSubtotal}>
                   小計: {subtotalCalories} kcal
@@ -191,19 +212,17 @@ const MealItem: React.FC<{
               </span>
             </div>
           )}
-          <div className={styles.mealItemName}>
-            {meal.content}
-          </div>
+          <div className={styles.mealItemName}>{meal.content}</div>
           <div className={styles.mealItemCalories}>
             {meal.calories ?? "-"} kcal
           </div>
           <div className={styles.mealItemDetails}>
-            <div>
-              グラム数: {meal.grams ?? "-"} g
-            </div>
+            <div>グラム数: {meal.grams ?? "-"} g</div>
             {hasNutritionInfo && (
               <div className={styles.mealItemNutrition}>
-                P: {formatNutrient(meal.protein)}g / F: {formatNutrient(meal.fat)}g / C: {formatNutrient(meal.carbohydrate)}g
+                P: {formatNutrient(meal.protein)}g / F:{" "}
+                {formatNutrient(meal.fat)}g / C:{" "}
+                {formatNutrient(meal.carbohydrate)}g
               </div>
             )}
           </div>
@@ -227,10 +246,16 @@ const MealItem: React.FC<{
           )}
         </div>
         <div style={{ display: "flex", gap: "8px" }}>
-          <button onClick={() => setIsEditing(true)} className={styles.mealDeleteButton}>
+          <button
+            onClick={() => setIsEditing(true)}
+            className={styles.mealDeleteButton}
+          >
             編集
           </button>
-          <button onClick={() => onDelete(meal.id)} className={styles.mealDeleteButton}>
+          <button
+            onClick={() => onDelete(meal.id)}
+            className={styles.mealDeleteButton}
+          >
             削除
           </button>
         </div>
@@ -268,7 +293,9 @@ const EditMealModal: React.FC<{
   const [grams, setGrams] = useState(toFormString(meal.grams));
   const [protein, setProtein] = useState(toFormString(meal.protein));
   const [fat, setFat] = useState(toFormString(meal.fat));
-  const [carbohydrate, setCarbohydrate] = useState(toFormString(meal.carbohydrate));
+  const [carbohydrate, setCarbohydrate] = useState(
+    toFormString(meal.carbohydrate)
+  );
   const [tags, setTags] = useState<string[]>(meal.tags || []);
 
   // UI状態
@@ -277,26 +304,29 @@ const EditMealModal: React.FC<{
 
   // モーダル表示時に背景のスクロールを防ぐ
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     };
   }, []);
 
   // タグセレクターの外側クリックで閉じる
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (tagSelectorRef.current && !tagSelectorRef.current.contains(event.target as Node)) {
+      if (
+        tagSelectorRef.current &&
+        !tagSelectorRef.current.contains(event.target as Node)
+      ) {
         setShowTagSelector(false);
       }
     };
 
     if (showTagSelector) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showTagSelector]);
 
@@ -307,7 +337,6 @@ const EditMealModal: React.FC<{
     );
   };
 
-  // フォーム送信処理
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -440,7 +469,11 @@ const EditMealModal: React.FC<{
           </div>
 
           <div className={styles.modalButtonGroup}>
-            <button type="button" onClick={onClose} className={styles.modalButtonCancel}>
+            <button
+              type="button"
+              onClick={onClose}
+              className={styles.modalButtonCancel}
+            >
               キャンセル
             </button>
             <button type="submit" className={styles.modalButtonSubmit}>

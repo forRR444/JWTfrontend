@@ -1,7 +1,4 @@
-/**
- * フォームの文字列フィールドを数値に変換するヘルパー関数
- * 空文字列の場合は undefined を返す
- */
+// 文字列フィールドを数値に変換（空はundefined）
 export function convertFormNumerics(
   fields: Record<string, string>
 ): Record<string, number | undefined> {
@@ -12,9 +9,7 @@ export function convertFormNumerics(
   return result;
 }
 
-/**
- * 個別のフィールドを数値に変換
- */
+// 単一値を数値に変換（空はundefined）
 export function toNumber(value: string): number | undefined {
   return value ? Number(value) : undefined;
 }

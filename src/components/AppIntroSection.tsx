@@ -10,7 +10,7 @@ export const AppIntroSection: React.FC = () => {
     <div className={styles.introSection}>
       <h2 className={styles.introTitle}>私の経験から生まれたアプリ</h2>
       <p className={styles.introText}>
-        減量をしていた時、食事の記録をつけるのが本当に大変でした。
+        減量・食事制限をしていた時、食事の記録をつけるのが本当に大変でした。
         食材を1つ1つ検索して、カロリーや栄養素を調べる作業が面倒で、
         「もっと簡単にできないか？」と毎日感じていました。
       </p>

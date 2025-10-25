@@ -1,5 +1,6 @@
 import type { Meal } from "../api";
 
+// 食事タイプ(朝食/昼食/夕食/間食/その他)
 export const MEAL_TYPES: Meal["meal_type"][] = [
   "breakfast",
   "lunch",

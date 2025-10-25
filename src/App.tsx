@@ -142,7 +142,7 @@ export default function App() {
             )
           }
         />
-        {/* ★ サインアップ後も state を確実に同期 */}
+        {/* サインアップ後も state を確実に同期 */}
         <Route
           path="/signup"
           element={<SignUp onSuccess={handleLoginSuccess} />}

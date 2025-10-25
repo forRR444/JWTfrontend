@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
-import { getMealSummaryByDate, getMealSummaryByRange, type MealGroups, type Meal } from "../api";
+import {
+  getMealSummaryByDate,
+  getMealSummaryByRange,
+  type MealGroups,
+  type Meal,
+} from "../api";
 import type { ViewMode } from "../utils/dateUtils";
 import { getWeekRange, getMonthRange } from "../utils/dateUtils";
 
-/**
- * 食事データを日付順にソート
- */
+// 食事データを日付順にソート
 const sortMealsByDate = (meals: Meal[]): Meal[] => {
   return meals.sort((a, b) => {
     const dateA = a.eaten_on || "";
@@ -39,7 +42,8 @@ export const useMealData = (viewMode: ViewMode, selectedDate: string) => {
         setAllMealsInRange(allMeals);
       } else {
         // 週・月ビュー: 期間のデータを取得
-        const range = mode === "week" ? getWeekRange(dateStr) : getMonthRange(dateStr);
+        const range =
+          mode === "week" ? getWeekRange(dateStr) : getMonthRange(dateStr);
         const res = await getMealSummaryByRange(range.from, range.to);
         setGroups(res.groups);
 

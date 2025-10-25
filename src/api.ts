@@ -3,26 +3,24 @@ import type { LoginResponse, Food, User } from "./types";
 const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || "http://localhost:3000";
 const API_BASE = `${API_ORIGIN}/api/v1`;
 
-// === 未認証に戻す（イベント通知付き）
+// 強制ログアウト処理
 function hardSignOut() {
   try {
     localStorage.removeItem("access_token");
     localStorage.removeItem("access_token_expires");
     localStorage.removeItem("current_user");
   } finally {
-    // ユーザーに通知してからログイン画面に戻る
     alert("認証が切れました。ログイン画面に戻ります。");
-    // どこからでも拾えるようにアプリ全体へ通知
     window.dispatchEvent(new Event("unauthorized"));
   }
 }
 
-// === 保存トークンの取得と有効性チェック
+// 保存済みアクセストークンの取得
 function getStoredToken(): string | null {
   return localStorage.getItem("access_token");
 }
 
-// export: 他のコンポーネントでも使用可能に
+// 保存済みexp（秒）を取得（不正値は0）
 export function getStoredExp(): number {
   // exp を秒で保存している前提。未設定は 0 扱い
   const raw = localStorage.getItem("access_token_expires") || "0";
@@ -30,27 +28,25 @@ export function getStoredExp(): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+// アクセストークンの期限切れ判定（30秒マージン）
 export function isAccessTokenExpired(): boolean {
   const expSec = getStoredExp();
   if (!expSec) return true;
   const nowSec = Math.floor(Date.now() / 1000);
-  // 多少の時計ズレに寛容に（30秒早めに期限切れ扱い）
   return nowSec >= expSec - 30;
 }
 
-// 起動時：期限切れの残骸をクリア（呼び出しはアプリ側のエントリで）
+// アクセストークンの期限切れ判定（30秒マージン）
 export function initAuthOnBoot() {
   if (!getStoredToken() || isAccessTokenExpired()) {
     hardSignOut();
   }
 }
 
-// プロアクティブなトークン更新機能
-// トークンの有効期限の1分前になったら自動的に更新を試みる
+// 自動リフレッシュのスケジュール管理
 let refreshTimerId: number | undefined = undefined;
-
+// 有効期限の60/30秒前に自動リフレッシュを予約
 export function scheduleTokenRefresh() {
-  // 既存のタイマーをクリア
   if (refreshTimerId !== undefined) {
     window.clearTimeout(refreshTimerId);
     refreshTimerId = undefined;
@@ -61,9 +57,6 @@ export function scheduleTokenRefresh() {
 
   const nowSec = Math.floor(Date.now() / 1000);
   const secondsUntilExpiry = expSec - nowSec;
-
-  // 有効期限の1分前（60秒前）に更新
-  // ただし、既に1分を切っている場合は30秒前に設定
   const refreshBeforeExpiry = secondsUntilExpiry > 120 ? 60 : 30;
   const delayMs = Math.max(
     0,
@@ -81,12 +74,10 @@ export function scheduleTokenRefresh() {
     refreshTimerId = window.setTimeout(async () => {
       try {
         console.log("[Token Schedule] 自動トークン更新を実行中...");
-        await refreshToken();
-        // 成功したら次の更新をスケジュール
+        await refreshToken(); // 成功時は次回も予約
         scheduleTokenRefresh();
       } catch (err) {
-        console.error("[Token Schedule] 自動トークン更新に失敗しました:", err);
-        // 失敗してもログアウトはせず、次のAPI呼び出し時に401で処理される
+        console.error("[Token Schedule] 自動トークン更新に失敗しました:", err); // 失敗時は次のAPI呼び出しで401処理に委ねる
       }
     }, delayMs);
   } else {
@@ -96,14 +87,14 @@ export function scheduleTokenRefresh() {
   }
 }
 
-// タイマーのクリーンアップ用
+// 自動リフレッシュの予約を解除
 export function cancelTokenRefresh() {
   if (refreshTimerId !== undefined) {
     window.clearTimeout(refreshTimerId);
     refreshTimerId = undefined;
   }
 }
-
+// APIエラー
 export class ApiError extends Error {
   status?: number;
   data?: unknown;
@@ -118,11 +109,10 @@ export class ApiError extends Error {
 type ApiFetchInit = {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
-  token?: string | null; // 未指定ならストレージの有効トークンを自動採用
-  // 内部用：リフレッシュ後の再試行フラグ
+  token?: string | null; // 未指定時は保存トークンを使用
   _retry?: boolean;
 };
-
+// 生fetch（JSON判定・エラー整形・Cookie同送）
 async function rawFetch(
   path: string,
   { method = "GET", body, token }: ApiFetchInit = {}
@@ -136,7 +126,7 @@ async function rawFetch(
   const res = await fetch(`${API_BASE}${path}`, {
     method,
     headers,
-    credentials: "include", // refresh_token Cookie を送るため必須
+    credentials: "include", // refresh_token Cookie送信
     body: body != null ? JSON.stringify(body) : undefined,
   });
 
@@ -154,7 +144,7 @@ async function rawFetch(
   return data;
 }
 
-// === 新規: リフレッシュAPI（Cookie の refresh_token を使用） ===
+// リフレッシュAPI（Cookieのrefresh_tokenで新トークン発行）
 export async function refreshToken(): Promise<LoginResponse> {
   console.log(
     "[Token Refresh] リフレッシュトークンを使用してアクセストークンを更新します..."
@@ -162,7 +152,7 @@ export async function refreshToken(): Promise<LoginResponse> {
   const res = await rawFetch("/auth_token/refresh", { method: "POST" });
   const loginResponse = res as LoginResponse; // { token, expires, user }
 
-  // トークン更新後、localStorageを更新してイベントを発火
+  // 新トークンを保存・通知
   localStorage.setItem("access_token", loginResponse.token);
   localStorage.setItem(
     "access_token_expires",
@@ -182,18 +172,15 @@ export async function refreshToken(): Promise<LoginResponse> {
     new Date(expiresNum * 1000).toLocaleString()
   );
 
-  // アプリ全体に更新を通知
   window.dispatchEvent(new Event("authorized"));
-
   return loginResponse;
 }
 
-// === 401時に自動リフレッシュ → 1回だけ再試行するラッパ ===
+// 401時に自動リフレッシュ → 1回だけ再試行するラッパ
 export async function apiFetch<T>(
   path: string,
   init: ApiFetchInit = {}
 ): Promise<T> {
-  // token 未指定なら保存済みの有効トークンを自動採用
   const token =
     init.token ?? (isAccessTokenExpired() ? null : getStoredToken());
   const { _retry, ...rest } = { ...init, token };
@@ -201,44 +188,37 @@ export async function apiFetch<T>(
   try {
     return (await rawFetch(path, rest)) as T;
   } catch (e: any) {
-    // 401 かつ未再試行なら refresh を試みる
     if (e instanceof ApiError && e.status === 401 && !_retry) {
       try {
         const r = await refreshToken();
-        // refreshToken() 内で既にlocalStorageとイベント発火済み
-
-        // 新トークンで 1 回だけ再試行
         return (await rawFetch(path, {
           ...rest,
           token: r.token,
-          _retry: true, // 無限ループ抑止（念のため）
+          _retry: true, // 無限ループ防止
         })) as T;
       } catch (refreshErr) {
-        // リフレッシュ失敗：認証状態をクリアして通知し、元の 401 を投げる
+        // リフレッシュ失敗時は破棄＆通知
         hardSignOut();
         throw e;
       }
     }
-
-    // 401 以外、または再試行済みの 401 はそのまま投げる
     throw e;
   }
 }
 
-// === エンドポイント関数 ===
+// 認証系エンドポイント
 export function login(params: { email: string; password: string }) {
-  // login は未認証前提なので token 付与は不要
   return apiFetch<LoginResponse>("/auth_token", {
     method: "POST",
     body: { auth: params },
   });
 }
 
-// ===（任意）明示サインアウト API 呼び出し用のヘルパー ★===
+// ローカルサインアウト
 export function signOutLocally() {
   hardSignOut();
 }
-//　新規登録
+// 新規登録
 export function register(params: {
   name: string;
   email: string;
@@ -251,7 +231,7 @@ export function register(params: {
   });
 }
 
-// Meals
+// Meals型・API
 export interface Meal {
   id: number;
   meal_type: "breakfast" | "lunch" | "dinner" | "snack" | "other";
@@ -266,11 +246,11 @@ export interface Meal {
   created_at: string;
   updated_at: string;
 }
-
+// 食事一覧取得
 export function listMeals() {
   return apiFetch<Meal[]>("/meals");
 }
-
+// 食事作成
 export function createMeal(
   meal: Partial<Meal> & { content: string; meal_type?: Meal["meal_type"] }
 ) {
@@ -289,7 +269,7 @@ export function createMeal(
   };
   return apiFetch<Meal>("/meals", { method: "POST", body: payload });
 }
-
+// 食事更新
 export function updateMeal(id: number, meal: Partial<Meal>) {
   const payload = {
     meal: {
@@ -306,11 +286,11 @@ export function updateMeal(id: number, meal: Partial<Meal>) {
   };
   return apiFetch<Meal>(`/meals/${id}`, { method: "PATCH", body: payload });
 }
-
+// 食事削除
 export function deleteMeal(id: number) {
   return apiFetch<void>(`/meals/${id}`, { method: "DELETE" });
 }
-
+// サマリー・カレンダー
 export type MealGroups = {
   range: { date?: string | null; from?: string | null; to?: string | null };
   groups: {
@@ -321,13 +301,13 @@ export type MealGroups = {
     other: Meal[];
   };
 };
-
+// 日付指定サマリー取得
 export function getMealSummaryByDate(date: string) {
   return apiFetch<MealGroups>(
     `/meals/summary?date=${encodeURIComponent(date)}`
   );
 }
-
+// 期間指定サマリー取得
 export function getMealSummaryByRange(from: string, to: string) {
   return apiFetch<MealGroups>(
     `/meals/summary?from=${encodeURIComponent(from)}&to=${encodeURIComponent(
@@ -335,7 +315,7 @@ export function getMealSummaryByRange(from: string, to: string) {
     )}`
   );
 }
-
+// カレンダーデータ取得
 export function getCalendarMonth(month: string) {
   // month: "YYYY-MM"
   return apiFetch<{
@@ -343,23 +323,19 @@ export function getCalendarMonth(month: string) {
     days: Record<string, { total: number; by_type: Record<string, number> }>;
   }>(`/meals/calendar?month=${encodeURIComponent(month)}`);
 }
-
-// === Foods API ===
+// Foods 検索
 export function searchFoods(query: string) {
   if (!query.trim()) {
     return Promise.resolve({ foods: [] });
   }
-  return apiFetch<{ foods: Food[] }>(
-    `/foods?q=${encodeURIComponent(query)}`
-  );
+  return apiFetch<{ foods: Food[] }>(`/foods?q=${encodeURIComponent(query)}`);
 }
-
-// === User API ===
+// User 情報
 export function fetchMe() {
   return apiFetch<User>("/me");
 }
 
-// === User Goals API ===
+// User 目標栄養の更新
 export interface NutritionGoals {
   target_calories?: number;
   target_protein?: number;

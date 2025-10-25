@@ -10,12 +10,18 @@ import mealStyles from "./styles/meals.module.css";
 
 type Me = { id: number | string; name: string };
 
+/**
+ * マイページ
+ * - /me API からログイン中ユーザー情報を取得して表示
+ * - 認証切れ時はエラー表示 → /login へ誘導
+ */
 export default function MePage({ onLogout }: { onLogout: () => void }) {
   const [me, setMe] = useState<Me | null>(null);
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const token = localStorage.getItem("access_token");
 
+  // 初期表示：未ログインなら /login、ログイン済みなら /me を取得
   useEffect(() => {
     if (!token) {
       navigate("/login", { replace: true });
@@ -32,12 +38,12 @@ export default function MePage({ onLogout }: { onLogout: () => void }) {
       }
     })();
   }, [token, navigate]);
-
+  // 明示的ログアウト
   const handleLogoutClick = () => {
     onLogout();
     navigate("/login", { replace: true });
   };
-
+  // アクセストークン手動更新
   const handleRefreshToken = async () => {
     try {
       await refreshToken();
@@ -47,17 +53,19 @@ export default function MePage({ onLogout }: { onLogout: () => void }) {
     }
   };
 
-  if (error) return (
-    <div className={styles.pageContainer}>
-      <div className={styles.error}>{error}</div>
-    </div>
-  );
+  if (error)
+    return (
+      <div className={styles.pageContainer}>
+        <div className={styles.error}>{error}</div>
+      </div>
+    );
 
-  if (!me) return (
-    <div className={styles.pageContainer}>
-      <div className={styles.loading}>読み込み中...</div>
-    </div>
-  );
+  if (!me)
+    return (
+      <div className={styles.pageContainer}>
+        <div className={styles.loading}>読み込み中...</div>
+      </div>
+    );
 
   return (
     <div className={styles.pageContainer}>
@@ -70,7 +78,7 @@ export default function MePage({ onLogout }: { onLogout: () => void }) {
             />
           }
         />
-
+        {/* 現在ページを強調表示 */}
         <AppNavigation currentPage="me" />
 
         <div className={mealStyles.formCard}>
