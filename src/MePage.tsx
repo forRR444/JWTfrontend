@@ -76,7 +76,7 @@ export default function MePage({ onLogout }: { onLogout: () => void }) {
           <Link to="/me" className={`${styles.navLink} ${styles.navLinkActive}`}>
             マイページ
           </Link>
-          <Link to="/meals" className={styles.navLink}>
+          <Link to="/dashboard" className={styles.navLink}>
             食事管理
           </Link>
         </nav>

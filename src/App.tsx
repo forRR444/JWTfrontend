@@ -136,7 +136,7 @@ export default function App() {
           path="/login"
           element={
             token && !isAccessTokenExpired() ? (
-              <Navigate to="/meals" replace />
+              <Navigate to="/dashboard" replace />
             ) : (
               <Login onSuccess={handleLoginSuccess} />
             )
@@ -156,7 +156,7 @@ export default function App() {
           }
         />
         <Route
-          path="/meals"
+          path="/dashboard"
           element={
             <Protected token={token}>
               <MealsPage />
@@ -167,7 +167,7 @@ export default function App() {
           path="/"
           element={
             <Navigate
-              to={token && !isAccessTokenExpired() ? "/meals" : "/login"}
+              to={token && !isAccessTokenExpired() ? "/dashboard" : "/login"}
               replace
             />
           }
