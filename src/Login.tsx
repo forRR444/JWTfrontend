@@ -43,7 +43,20 @@ export default function Login({
       onSuccess?.(res);
       navigate("/me", { replace: true });
     } catch (err: any) {
-      setErrMsg(err?.message ?? "ログインに失敗しました。");
+      // エラーメッセージを取得（APIエラーからメッセージを抽出）
+      let errorMessage = "ログインに失敗しました。";
+
+      if (err?.message) {
+        errorMessage = err.message;
+      } else if (err?.status === 404) {
+        errorMessage = "メールアドレスまたはパスワードが正しくありません。";
+      } else if (err?.status === 401) {
+        errorMessage = "認証に失敗しました。再度お試しください。";
+      } else if (err?.status >= 500) {
+        errorMessage = "サーバーエラーが発生しました。しばらくしてから再度お試しください。";
+      }
+
+      setErrMsg(errorMessage);
     } finally {
       setLoading(false);
     }
