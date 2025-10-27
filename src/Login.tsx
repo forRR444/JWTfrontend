@@ -75,20 +75,20 @@ export default function Login({
 
   return (
     <div className={styles.container}>
-      <AppHeader
-        actions={
-          <button
-            type="button"
-            onClick={handleTestLogin}
-            disabled={loading}
-            className={styles.testLoginButton}
-          >
-            テストログイン
-          </button>
-        }
-      />
-
       <div className={styles.contentWrapper}>
+        <AppHeader
+          actions={
+            <button
+              type="button"
+              onClick={handleTestLogin}
+              disabled={loading}
+              className={styles.testLoginButton}
+            >
+              テストログイン
+            </button>
+          }
+        />
+
         {/* アプリ紹介セクション */}
         <AppIntroSection />
 
