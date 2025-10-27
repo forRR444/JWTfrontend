@@ -57,9 +57,9 @@ export default function SignUp({
 
   return (
     <div className={styles.container}>
-      <AppHeader />
-
       <div className={styles.contentWrapper}>
+        <AppHeader />
+
         {/* アプリ紹介セクション */}
         <AppIntroSection />
 

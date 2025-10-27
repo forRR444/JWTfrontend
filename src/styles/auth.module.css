@@ -4,43 +4,29 @@
 
 /* レイアウト */
 .container {
-  max-width: 480px;
+  max-width: 720px;
   margin: 0 auto;
   padding: 24px;
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
 }
 
-/* 大画面用：縦並びレイアウト */
-@media (min-width: 1024px) {
+/* 大画面用 */
+@media (min-width: 768px) {
   .container {
-    max-width: 640px;
     padding: 40px;
   }
 }
 
-/* ヘッダーセクション */
-.header {
-  text-align: left;
-  margin-bottom: 40px;
-  position: relative;
+@media (min-width: 1024px) {
+  .container {
+    padding: 48px 64px;
+  }
 }
 
-.logo {
-  font-size: 20px;
-  font-weight: 600;
-  color: #1a1a1a;
-  margin: 0 0 8px 0;
-  letter-spacing: 0.02em;
-}
-
-.tagline {
-  font-size: 14px;
-  color: #666;
-  margin: 0;
-  font-weight: 400;
+/* コンテンツラッパー - ログイン後と同じ幅に統一 */
+.contentWrapper {
+  max-width: 720px;
+  margin: 0 auto;
 }
 
 /* テストログインボタン */
@@ -79,6 +65,8 @@
   border-radius: 4px;
   padding: 32px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  max-width: 480px;
+  margin: 0 auto;
 }
 
 .cardTitle {
@@ -207,6 +195,9 @@
   border-radius: 4px;
   padding: 24px;
   margin-bottom: 32px;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .introTitle {
