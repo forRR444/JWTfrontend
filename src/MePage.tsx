@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { apiFetch, refreshToken } from "./api";
+import { AppHeader } from "./components/AppHeader";
 import styles from "./styles/app.module.css";
 import mealStyles from "./styles/meals.module.css";
 
@@ -58,17 +59,18 @@ export default function MePage({ onLogout }: { onLogout: () => void }) {
   return (
     <div className={styles.pageContainer}>
       <div className={mealStyles.contentWrapper}>
-        <header className={styles.header}>
-          <h1 className={styles.headerTitle}>マイページ</h1>
-          <div className={styles.headerActions}>
-            <button onClick={handleRefreshToken} className={`${styles.buttonSecondary} ${styles.buttonSmall}`}>
-              トークン更新
-            </button>
-            <button onClick={handleLogoutClick} className={`${styles.buttonSecondary} ${styles.buttonSmall}`}>
-              ログアウト
-            </button>
-          </div>
-        </header>
+        <AppHeader
+          actions={
+            <>
+              <button onClick={handleRefreshToken} className={`${styles.buttonSecondary} ${styles.buttonSmall}`}>
+                トークン更新
+              </button>
+              <button onClick={handleLogoutClick} className={`${styles.buttonSecondary} ${styles.buttonSmall}`}>
+                ログアウト
+              </button>
+            </>
+          }
+        />
 
         <nav className={styles.nav}>
           <Link to="/me" className={`${styles.navLink} ${styles.navLinkActive}`}>
