@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { createMeal, deleteMeal, refreshToken, fetchMe } from "./api";
+import { createMeal, deleteMeal, updateMeal, refreshToken, fetchMe } from "./api";
 import { clearAuth } from "./auth";
 import type { User } from "./types";
 import type { ViewMode } from "./utils/dateUtils";
@@ -18,6 +18,7 @@ import { MealForm } from "./components/meals/MealForm";
 import { MealListView } from "./components/meals/MealListView";
 import { NutritionSummary } from "./components/NutritionSummary";
 import { NutritionGoalModal } from "./components/NutritionGoalModal";
+import { AppHeader } from "./components/AppHeader";
 import styles from "./styles/app.module.css";
 import mealStyles from "./styles/meals.module.css";
 
@@ -69,6 +70,16 @@ export default function MealsPage() {
     }
   };
 
+  // 食事更新
+  const handleMealUpdate = async (id: number, data: any) => {
+    try {
+      await updateMeal(id, data);
+      refetch();
+    } catch (e: any) {
+      alert(e?.message || "更新に失敗しました");
+    }
+  };
+
   // ユーザー情報を取得
   useEffect(() => {
     fetchMe()
@@ -85,17 +96,18 @@ export default function MealsPage() {
     <div className={styles.pageContainer}>
       <div className={mealStyles.contentWrapper}>
         {/* ヘッダー */}
-        <header className={styles.header}>
-          <h1 className={styles.headerTitle}>食事管理</h1>
-          <div className={styles.headerActions}>
-            <button onClick={handleRefreshToken} className={`${styles.buttonSecondary} ${styles.buttonSmall}`}>
-              トークン更新
-            </button>
-            <button onClick={handleLogoutClick} className={`${styles.buttonSecondary} ${styles.buttonSmall}`}>
-              ログアウト
-            </button>
-          </div>
-        </header>
+        <AppHeader
+          actions={
+            <>
+              <button onClick={handleRefreshToken} className={`${styles.buttonSecondary} ${styles.buttonSmall}`}>
+                トークン更新
+              </button>
+              <button onClick={handleLogoutClick} className={`${styles.buttonSecondary} ${styles.buttonSmall}`}>
+                ログアウト
+              </button>
+            </>
+          }
+        />
 
         {/* ナビゲーション */}
         <nav className={styles.nav}>
@@ -145,6 +157,7 @@ export default function MealsPage() {
             groups={groups}
             allMealsInRange={allMealsInRange}
             onDelete={handleMealDelete}
+            onUpdate={handleMealUpdate}
           />
         )}
       </div>
