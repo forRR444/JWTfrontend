@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { apiFetch, refreshToken } from "./api";
+import { clearAuth } from "./auth";
 import { AppHeader } from "./components/AppHeader";
+import { HeaderActions } from "./components/HeaderActions";
+import { AppNavigation } from "./components/AppNavigation";
 import styles from "./styles/app.module.css";
 import mealStyles from "./styles/meals.module.css";
 
@@ -61,25 +64,14 @@ export default function MePage({ onLogout }: { onLogout: () => void }) {
       <div className={mealStyles.contentWrapper}>
         <AppHeader
           actions={
-            <>
-              <button onClick={handleRefreshToken} className={`${styles.buttonSecondary} ${styles.buttonSmall}`}>
-                トークン更新
-              </button>
-              <button onClick={handleLogoutClick} className={`${styles.buttonSecondary} ${styles.buttonSmall}`}>
-                ログアウト
-              </button>
-            </>
+            <HeaderActions
+              onRefreshToken={handleRefreshToken}
+              onLogout={handleLogoutClick}
+            />
           }
         />
 
-        <nav className={styles.nav}>
-          <Link to="/me" className={`${styles.navLink} ${styles.navLinkActive}`}>
-            マイページ
-          </Link>
-          <Link to="/dashboard" className={styles.navLink}>
-            食事管理
-          </Link>
-        </nav>
+        <AppNavigation currentPage="me" />
 
         <div className={mealStyles.formCard}>
           <h2 className={mealStyles.formTitle}>ユーザー情報</h2>
