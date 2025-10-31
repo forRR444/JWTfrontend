@@ -4,6 +4,10 @@ export interface User {
   id: number | string;
   name: string;
   email: string;
+  target_calories?: number | null;
+  target_protein?: number | null;
+  target_fat?: number | null;
+  target_carbohydrate?: number | null;
   // 必要に応じて拡張
   [key: string]: unknown;
 }
@@ -18,4 +22,13 @@ export interface Project {
   id: number | string;
   name: string;
   updatedAt: ISODateString | string | number;
+}
+
+export interface Food {
+  id: number;
+  name: string;
+  calories: number | null;
+  protein: number | null;
+  fat: number | null;
+  carbohydrate: number | null;
 }
