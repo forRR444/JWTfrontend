@@ -5,6 +5,7 @@
 import React from "react";
 import type { User } from "../types";
 import type { Meal } from "../api";
+import styles from "../styles/meals.module.css";
 
 interface NutritionSummaryProps {
   meals: Meal[];
@@ -42,43 +43,16 @@ export const NutritionSummary: React.FC<NutritionSummaryProps> = ({
     user.target_carbohydrate;
 
   return (
-    <div
-      style={{
-        border: "1px solid #ddd",
-        borderRadius: 8,
-        padding: 16,
-        marginBottom: 24,
-        backgroundColor: "#f8f9fa",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 16,
-        }}
-      >
-        <h3 style={{ margin: 0 }}>本日の栄養素</h3>
-        <button
-          onClick={onOpenGoalModal}
-          style={{
-            padding: "8px 16px",
-            fontSize: 14,
-            backgroundColor: "#28a745",
-            color: "white",
-            border: "none",
-            borderRadius: 4,
-            cursor: "pointer",
-          }}
-        >
+    <div className={styles.nutritionCard}>
+      <div className={styles.nutritionHeader}>
+        <h3 className={styles.nutritionTitle}>本日の栄養素</h3>
+        <button onClick={onOpenGoalModal} className={styles.nutritionButton}>
           {hasGoals ? "目標を編集" : "目標を設定"}
         </button>
       </div>
 
       {hasGoals ? (
-        <div style={{ display: "grid", gap: 16 }}>
-          {/* カロリー */}
+        <div className={styles.nutritionList}>
           {user.target_calories && (
             <NutritionItem
               label="カロリー"
@@ -89,7 +63,6 @@ export const NutritionSummary: React.FC<NutritionSummaryProps> = ({
             />
           )}
 
-          {/* たんぱく質 */}
           {user.target_protein && (
             <NutritionItem
               label="たんぱく質"
@@ -100,7 +73,6 @@ export const NutritionSummary: React.FC<NutritionSummaryProps> = ({
             />
           )}
 
-          {/* 脂質 */}
           {user.target_fat && (
             <NutritionItem
               label="脂質"
@@ -111,7 +83,6 @@ export const NutritionSummary: React.FC<NutritionSummaryProps> = ({
             />
           )}
 
-          {/* 炭水化物 */}
           {user.target_carbohydrate && (
             <NutritionItem
               label="炭水化物"
@@ -123,7 +94,7 @@ export const NutritionSummary: React.FC<NutritionSummaryProps> = ({
           )}
         </div>
       ) : (
-        <div style={{ textAlign: "center", padding: "32px 0", color: "#666" }}>
+        <div className={styles.nutritionEmpty}>
           <p>目標を設定すると、達成状況を確認できます</p>
         </div>
       )}
@@ -153,23 +124,15 @@ const NutritionItem: React.FC<NutritionItemProps> = ({
   const isOver = diff > 0;
 
   return (
-    <div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          marginBottom: 4,
-        }}
-      >
-        <span style={{ fontWeight: "bold" }}>{label}</span>
-        <span>
+    <div className={styles.nutritionItem}>
+      <div className={styles.nutritionItemHeader}>
+        <span className={styles.nutritionLabel}>{label}</span>
+        <span className={styles.nutritionValues}>
           {safeCurrent.toFixed(1)} / {safeTarget} {unit}
           <span
-            style={{
-              marginLeft: 8,
-              color: isOver ? "#dc3545" : "#28a745",
-              fontSize: 14,
-            }}
+            className={`${styles.nutritionDiff} ${
+              isOver ? styles.nutritionDiffOver : styles.nutritionDiffUnder
+            }`}
           >
             ({isOver ? "+" : ""}
             {diff.toFixed(1)} {unit})
@@ -177,35 +140,18 @@ const NutritionItem: React.FC<NutritionItemProps> = ({
         </span>
       </div>
 
-      {/* プログレスバー */}
-      <div
-        style={{
-          width: "100%",
-          height: 24,
-          backgroundColor: "#e9ecef",
-          borderRadius: 12,
-          overflow: "hidden",
-          position: "relative",
-        }}
-      >
+      <div className={styles.progressBar}>
         <div
+          className={styles.progressFill}
           style={{
             width: `${Math.min(percentage, 100)}%`,
-            height: "100%",
             backgroundColor: color,
-            transition: "width 0.3s ease",
           }}
         />
         <span
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            fontSize: 12,
-            fontWeight: "bold",
-            color: percentage > 50 ? "white" : "#333",
-          }}
+          className={`${styles.progressText} ${
+            percentage > 50 ? styles.progressTextDark : styles.progressTextLight
+          }`}
         >
           {percentage.toFixed(0)}%
         </span>
