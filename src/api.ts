@@ -196,7 +196,7 @@ export async function apiFetch<T>(
           token: r.token,
           _retry: true, // 無限ループ防止
         })) as T;
-      } catch (refreshErr) {
+      } catch (_refreshErr) {
         // リフレッシュ失敗時は破棄＆通知
         hardSignOut();
         throw e;
