@@ -60,7 +60,7 @@ describe("認証フロー", () => {
       const mockLoginResponse = {
         token: "test-access-token",
         expires: Math.floor(Date.now() / 1000) + 600,
-        user: { id: 1, name: "Test User" },
+        user: { id: 1, name: "Test User", email: "test@example.com" },
       };
 
       vi.mocked(login).mockResolvedValue(mockLoginResponse);
@@ -164,7 +164,7 @@ describe("認証フロー", () => {
 
   describe("localStorage管理", () => {
     it("ログイン時にユーザー情報がlocalStorageに保存される", () => {
-      const user = { id: 1, name: "Test User" };
+      const user = { id: 1, name: "Test User", email: "test@example.com" };
       localStorage.setItem("current_user", JSON.stringify(user));
 
       const storedUser = JSON.parse(
