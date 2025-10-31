@@ -13,6 +13,7 @@ import MePage from "./MePage";
 import MealsPage from "./MealsPage";
 import type { LoginResponse } from "./types";
 import { getToken, clearAuth } from "./auth";
+import { scheduleTokenRefresh, cancelTokenRefresh } from "./api";
 
 // 有効期限チェック
 function getExpSec(): number {
@@ -38,12 +39,17 @@ function AuthBridge({ setToken }: { setToken: (t: string | null) => void }) {
     if (!getToken() || isAccessTokenExpired()) {
       clearAuth();
       setToken(null);
+      cancelTokenRefresh(); // タイマーもクリア
       if (!publicPaths.has(location.pathname)) {
         navigate("/login", { replace: true });
       }
+    } else {
+      // ログイン状態ならプロアクティブな更新をスケジュール
+      scheduleTokenRefresh();
     }
 
-    // 自動ログアウトタイマー
+    // 自動ログアウトタイマー（フォールバック用）
+    // プロアクティブ更新が失敗した場合の最終防御線
     const nowMs = Date.now();
     const expMs = getExpSec() * 1000;
     const delay = Math.max(0, expMs - nowMs);
@@ -52,6 +58,7 @@ function AuthBridge({ setToken }: { setToken: (t: string | null) => void }) {
       timeoutId = window.setTimeout(() => {
         clearAuth();
         setToken(null);
+        cancelTokenRefresh();
         if (!publicPaths.has(location.pathname)) {
           navigate("/login", { replace: true });
         }
@@ -62,15 +69,17 @@ function AuthBridge({ setToken }: { setToken: (t: string | null) => void }) {
     const onUnauthorized = () => {
       clearAuth();
       setToken(null);
+      cancelTokenRefresh();
       if (!publicPaths.has(location.pathname)) {
         navigate("/login", { replace: true });
       }
     };
     window.addEventListener("unauthorized", onUnauthorized);
 
-    // サインアップ/ログイン成功通知（任意）
+    // サインアップ/ログイン成功通知（トークン更新時も発火）
     const onAuthorized = () => {
       setToken(getToken());
+      scheduleTokenRefresh(); // 更新されたトークンで次の更新をスケジュール
     };
     window.addEventListener("authorized", onAuthorized);
 
@@ -116,6 +125,7 @@ export default function App() {
   const handleLogout = () => {
     clearAuth();
     setToken(null);
+    cancelTokenRefresh();
   };
 
   return (
