@@ -92,8 +92,12 @@ export const MealForm: React.FC<MealFormProps> = ({ selectedDate, onSubmit }) =>
       const response = await searchFoods(content.trim());
       setSearchResults(response.foods);
       setHasSearched(true);
-    } catch (e: any) {
-      setError(e?.message || "検索に失敗しました");
+    } catch (e: unknown) {
+      const message =
+        e && typeof e === "object" && "message" in e && typeof e.message === "string"
+          ? e.message
+          : "検索に失敗しました";
+      setError(message);
       setSearchResults([]);
       setHasSearched(true);
     } finally {
@@ -172,8 +176,12 @@ export const MealForm: React.FC<MealFormProps> = ({ selectedDate, onSubmit }) =>
       });
 
       resetForm();
-    } catch (e: any) {
-      setError(e?.message || "作成に失敗しました");
+    } catch (e: unknown) {
+      const message =
+        e && typeof e === "object" && "message" in e && typeof e.message === "string"
+          ? e.message
+          : "作成に失敗しました";
+      setError(message);
     }
   };
 
@@ -255,7 +263,7 @@ export const MealForm: React.FC<MealFormProps> = ({ selectedDate, onSubmit }) =>
             <select
               id="mealType"
               value={mealType}
-              onChange={(e) => setMealType(e.target.value as any)}
+              onChange={(e) => setMealType(e.target.value as Meal["meal_type"])}
               className={styles.select}
             >
               {MEAL_TYPES.map((mt) => (
