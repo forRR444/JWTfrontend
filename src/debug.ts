@@ -88,12 +88,21 @@ export function debugAuth() {
   showNextRefreshTime();
 }
 
+// デバッグ関数の型定義
+interface DebugWindow extends Window {
+  showTokenInfo: typeof showTokenInfo;
+  showCookieInfo: typeof showCookieInfo;
+  showNextRefreshTime: typeof showNextRefreshTime;
+  debugAuth: typeof debugAuth;
+}
+
 // ブラウザのコンソールから直接実行できるようにグローバルに公開
 if (typeof window !== "undefined") {
-  (window as any).showTokenInfo = showTokenInfo;
-  (window as any).showCookieInfo = showCookieInfo;
-  (window as any).showNextRefreshTime = showNextRefreshTime;
-  (window as any).debugAuth = debugAuth;
+  const debugWindow = window as unknown as DebugWindow;
+  debugWindow.showTokenInfo = showTokenInfo;
+  debugWindow.showCookieInfo = showCookieInfo;
+  debugWindow.showNextRefreshTime = showNextRefreshTime;
+  debugWindow.debugAuth = debugAuth;
 
   console.log("デバッグ用の関数がロードされました:");
   console.log("  - showTokenInfo() : トークン情報を表示");
