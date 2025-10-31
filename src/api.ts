@@ -135,9 +135,10 @@ async function rawFetch(
   const data = isJson ? await res.json().catch(() => ({})) : ({} as unknown);
 
   if (!res.ok) {
+    const errorData = data as { error?: string; message?: string };
     const msg =
-      (isJson && (data as any)?.error) ||
-      (isJson && (data as any)?.message) ||
+      (isJson && errorData.error) ||
+      (isJson && errorData.message) ||
       `HTTP ${res.status}`;
     throw new ApiError(msg, res.status, data);
   }
@@ -187,7 +188,7 @@ export async function apiFetch<T>(
 
   try {
     return (await rawFetch(path, rest)) as T;
-  } catch (e: any) {
+  } catch (e: unknown) {
     if (e instanceof ApiError && e.status === 401 && !_retry) {
       try {
         const r = await refreshToken();
