@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiFetch } from "./api";
-import { refreshToken } from "./api";
+import { apiFetch, refreshToken, scheduleTokenRefresh } from "./api";
 
 type Me = { id: number | string; name: string };
 
@@ -49,16 +48,9 @@ export default function MePage({ onLogout }: { onLogout: () => void }) {
       <button
         onClick={async () => {
           try {
-            const r = await refreshToken();
-            localStorage.setItem("access_token", r.token);
-            localStorage.setItem(
-              "access_token_expires",
-              String(r.expires ?? "")
-            );
-            localStorage.setItem(
-              "current_user",
-              JSON.stringify(r.user ?? null)
-            );
+            await refreshToken();
+            // refreshToken() 内で既にlocalStorageとイベント発火、
+            // scheduleTokenRefresh() も実行済み
             alert("アクセストークンを更新しました");
           } catch {
             alert("更新に失敗。再ログインしてください");
