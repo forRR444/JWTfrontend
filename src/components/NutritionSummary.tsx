@@ -59,7 +59,7 @@ export const NutritionSummary: React.FC<NutritionSummaryProps> = ({
               current={totals.calories}
               target={user.target_calories}
               unit="kcal"
-              color="#ff6b6b"
+              color="#4a90e2"
             />
           )}
 
@@ -69,7 +69,7 @@ export const NutritionSummary: React.FC<NutritionSummaryProps> = ({
               current={totals.protein}
               target={user.target_protein}
               unit="g"
-              color="#4dabf7"
+              color="#5fa3ef"
             />
           )}
 
@@ -79,7 +79,7 @@ export const NutritionSummary: React.FC<NutritionSummaryProps> = ({
               current={totals.fat}
               target={user.target_fat}
               unit="g"
-              color="#ffd43b"
+              color="#74b6f9"
             />
           )}
 
@@ -89,7 +89,7 @@ export const NutritionSummary: React.FC<NutritionSummaryProps> = ({
               current={totals.carbohydrate}
               target={user.target_carbohydrate}
               unit="g"
-              color="#74c0fc"
+              color="#89c9ff"
             />
           )}
         </div>
