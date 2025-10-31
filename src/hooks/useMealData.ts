@@ -54,8 +54,12 @@ export const useMealData = (viewMode: ViewMode, selectedDate: string) => {
       }
 
       setError(null);
-    } catch (e: any) {
-      setError(e?.message || "取得に失敗しました");
+    } catch (e: unknown) {
+      const message =
+        e && typeof e === "object" && "message" in e && typeof e.message === "string"
+          ? e.message
+          : "取得に失敗しました";
+      setError(message);
     } finally {
       setLoading(false);
     }
