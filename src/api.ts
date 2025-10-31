@@ -21,13 +21,16 @@ function hardSignOut() {
 function getStoredToken(): string | null {
   return localStorage.getItem("access_token");
 }
-function getStoredExp(): number {
+
+// export: 他のコンポーネントでも使用可能に
+export function getStoredExp(): number {
   // exp を秒で保存している前提。未設定は 0 扱い
   const raw = localStorage.getItem("access_token_expires") || "0";
   const n = Number(raw);
   return Number.isFinite(n) ? n : 0;
 }
-function isAccessTokenExpired(): boolean {
+
+export function isAccessTokenExpired(): boolean {
   const expSec = getStoredExp();
   if (!expSec) return true;
   const nowSec = Math.floor(Date.now() / 1000);
