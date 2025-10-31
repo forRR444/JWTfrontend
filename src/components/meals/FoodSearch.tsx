@@ -28,8 +28,12 @@ export const FoodSearch: React.FC<FoodSearchProps> = ({ onSelect }) => {
     try {
       const response = await searchFoods(query.trim());
       setResults(response.foods);
-    } catch (e: any) {
-      setError(e?.message || "検索に失敗しました");
+    } catch (e: unknown) {
+      const message =
+        e && typeof e === "object" && "message" in e && typeof e.message === "string"
+          ? e.message
+          : "検索に失敗しました";
+      setError(message);
       setResults([]);
     } finally {
       setLoading(false);

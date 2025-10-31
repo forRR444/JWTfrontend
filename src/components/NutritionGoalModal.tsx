@@ -56,8 +56,12 @@ export const NutritionGoalModal: React.FC<NutritionGoalModalProps> = ({
       const updatedUser = await updateNutritionGoals(goals);
       onUpdate(updatedUser);
       onClose();
-    } catch (e: any) {
-      setError(e?.message || "更新に失敗しました");
+    } catch (e: unknown) {
+      const message =
+        e && typeof e === "object" && "message" in e && typeof e.message === "string"
+          ? e.message
+          : "更新に失敗しました";
+      setError(message);
     } finally {
       setLoading(false);
     }
