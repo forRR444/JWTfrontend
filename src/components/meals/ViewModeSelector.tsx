@@ -4,6 +4,7 @@
  */
 import React from "react";
 import type { ViewMode } from "../../utils/dateUtils";
+import styles from "../../styles/meals.module.css";
 
 interface ViewModeSelectorProps {
   viewMode: ViewMode;
@@ -18,32 +19,30 @@ export const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
   viewMode,
   onViewModeChange,
 }) => {
-  const buttonStyle = (isActive: boolean) => ({
-    padding: "8px 16px",
-    borderRadius: 6,
-    border: isActive ? "2px solid #4a90e2" : "1px solid #ddd",
-    backgroundColor: isActive ? "#e3f2fd" : "white",
-    fontWeight: isActive ? "bold" : "normal",
-    cursor: "pointer",
-  });
-
   return (
-    <div
-      style={{
-        display: "flex",
-        gap: 8,
-        marginBottom: 16,
-        borderBottom: "2px solid #ddd",
-        paddingBottom: 8,
-      }}
-    >
-      <button onClick={() => onViewModeChange("day")} style={buttonStyle(viewMode === "day")}>
+    <div className={styles.viewModeSelector}>
+      <button
+        onClick={() => onViewModeChange("day")}
+        className={`${styles.viewModeButton} ${
+          viewMode === "day" ? styles.viewModeButtonActive : ""
+        }`}
+      >
         日
       </button>
-      <button onClick={() => onViewModeChange("week")} style={buttonStyle(viewMode === "week")}>
+      <button
+        onClick={() => onViewModeChange("week")}
+        className={`${styles.viewModeButton} ${
+          viewMode === "week" ? styles.viewModeButtonActive : ""
+        }`}
+      >
         週
       </button>
-      <button onClick={() => onViewModeChange("month")} style={buttonStyle(viewMode === "month")}>
+      <button
+        onClick={() => onViewModeChange("month")}
+        className={`${styles.viewModeButton} ${
+          viewMode === "month" ? styles.viewModeButtonActive : ""
+        }`}
+      >
         月
       </button>
     </div>
