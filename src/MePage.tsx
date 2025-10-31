@@ -83,10 +83,6 @@ export default function MePage({ onLogout }: { onLogout: () => void }) {
           <h2 className={mealStyles.formTitle}>ユーザー情報</h2>
           <div className={styles.cardContent}>
             <div className={styles.infoRow}>
-              <div className={styles.infoLabel}>ユーザーID</div>
-              <div className={styles.infoValue}>{String(me.id)}</div>
-            </div>
-            <div className={styles.infoRow}>
               <div className={styles.infoLabel}>名前</div>
               <div className={styles.infoValue}>{me.name}</div>
             </div>
