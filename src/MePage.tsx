@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch, refreshToken } from "./api";
-import { clearAuth } from "./auth";
 import { AppHeader } from "./components/AppHeader";
 import { HeaderActions } from "./components/HeaderActions";
 import { AppNavigation } from "./components/AppNavigation";
