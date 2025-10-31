@@ -9,6 +9,10 @@ import { MEAL_TYPES, MEAL_TYPE_LABELS } from "../../constants/mealTypes";
 import { searchFoods } from "../../api";
 import styles from "../../styles/meals.module.css";
 
+// 利用可能なタグの定数
+const AVAILABLE_TAGS = ["外食", "自炊", "和食", "洋食", "中華", "韓国料理", "イタリアン"];
+const DEFAULT_GRAMS_FOR_SEARCH = "100";
+
 interface MealFormProps {
   selectedDate: string;
   onSubmit: (mealData: {
@@ -30,6 +34,7 @@ interface MealFormProps {
  * 送信成功後、フォームは自動的にリセットされる
  */
 export const MealForm: React.FC<MealFormProps> = ({ selectedDate, onSubmit }) => {
+  // フォーム入力状態
   const [content, setContent] = useState("");
   const [mealType, setMealType] = useState<Meal["meal_type"]>("other");
   const [calories, setCalories] = useState("");
@@ -38,6 +43,8 @@ export const MealForm: React.FC<MealFormProps> = ({ selectedDate, onSubmit }) =>
   const [fat, setFat] = useState("");
   const [carbohydrate, setCarbohydrate] = useState("");
   const [tags, setTags] = useState<string[]>([]);
+
+  // UI状態
   const [error, setError] = useState<string | null>(null);
   const [searchResults, setSearchResults] = useState<Food[]>([]);
   const [searching, setSearching] = useState(false);
@@ -45,8 +52,6 @@ export const MealForm: React.FC<MealFormProps> = ({ selectedDate, onSubmit }) =>
   const [showDetails, setShowDetails] = useState(false);
   const [showTagSelector, setShowTagSelector] = useState(false);
   const tagSelectorRef = useRef<HTMLDivElement>(null);
-
-  const availableTags = ["外食", "自炊", "和食", "洋食", "中華", "韓国料理", "イタリアン"];
 
   // タグセレクターの外側クリックで閉じる
   useEffect(() => {
@@ -65,12 +70,14 @@ export const MealForm: React.FC<MealFormProps> = ({ selectedDate, onSubmit }) =>
     };
   }, [showTagSelector]);
 
+  // タグの選択・解除を切り替え
   const handleTagToggle = (tag: string) => {
     setTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
   };
 
+  // 食品検索を実行
   const handleSearch = async () => {
     if (!content.trim()) {
       setSearchResults([]);
@@ -94,27 +101,24 @@ export const MealForm: React.FC<MealFormProps> = ({ selectedDate, onSubmit }) =>
     }
   };
 
+  // 検索結果から食品を選択してフォームに反映
   const handleFoodSelect = (food: Food) => {
-    // 選択した食品の情報をフォームに反映（100gあたり）
     setContent(food.name);
-    setGrams("100");
-    if (food.calories) {
-      setCalories(String(food.calories));
-    }
-    if (food.protein) {
-      setProtein(String(food.protein));
-    }
-    if (food.fat) {
-      setFat(String(food.fat));
-    }
-    if (food.carbohydrate) {
-      setCarbohydrate(String(food.carbohydrate));
-    }
+    setGrams(DEFAULT_GRAMS_FOR_SEARCH);
+
+    // 栄養情報を文字列に変換してセット
+    if (food.calories) setCalories(String(food.calories));
+    if (food.protein) setProtein(String(food.protein));
+    if (food.fat) setFat(String(food.fat));
+    if (food.carbohydrate) setCarbohydrate(String(food.carbohydrate));
+
+    // 検索状態をクリア
     setSearchResults([]);
     setHasSearched(false);
     setShowDetails(true); // 検索結果から選んだ場合は詳細を自動表示
   };
 
+  // Enterキーで検索を実行
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -122,14 +126,33 @@ export const MealForm: React.FC<MealFormProps> = ({ selectedDate, onSubmit }) =>
     }
   };
 
+  // 食事内容の入力をクリア
   const handleClearContent = () => {
     setContent("");
     setSearchResults([]);
     setHasSearched(false);
   };
 
+  // フォームをリセット
+  const resetForm = () => {
+    setContent("");
+    setMealType("other");
+    setCalories("");
+    setGrams("");
+    setProtein("");
+    setFat("");
+    setCarbohydrate("");
+    setTags([]);
+    setError(null);
+    setSearchResults([]);
+    setHasSearched(false);
+    setShowDetails(false);
+  };
+
+  // フォーム送信処理
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!content.trim()) {
       setError("食事内容は必須です");
       return;
@@ -148,19 +171,7 @@ export const MealForm: React.FC<MealFormProps> = ({ selectedDate, onSubmit }) =>
         eaten_on: selectedDate,
       });
 
-      // リセット
-      setContent("");
-      setMealType("other");
-      setCalories("");
-      setGrams("");
-      setProtein("");
-      setFat("");
-      setCarbohydrate("");
-      setTags([]);
-      setError(null);
-      setSearchResults([]);
-      setHasSearched(false);
-      setShowDetails(false);
+      resetForm();
     } catch (e: any) {
       setError(e?.message || "作成に失敗しました");
     }
@@ -279,7 +290,7 @@ export const MealForm: React.FC<MealFormProps> = ({ selectedDate, onSubmit }) =>
               </button>
               {showTagSelector && (
                 <div className={styles.tagDropdown}>
-                  {availableTags.map((tag) => (
+                  {AVAILABLE_TAGS.map((tag) => (
                     <label key={tag} className={styles.tagCheckboxLabel}>
                       <input
                         type="checkbox"
