@@ -1,6 +1,6 @@
 import { useState, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { login } from "./api";
+import { login, scheduleTokenRefresh } from "./api";
 import type { LoginResponse } from "./types";
 import { Link } from "react-router-dom";
 
@@ -24,6 +24,9 @@ export default function Login({
       localStorage.setItem("access_token", res.token);
       localStorage.setItem("access_token_expires", String(res.expires ?? ""));
       localStorage.setItem("current_user", JSON.stringify(res.user ?? null));
+
+      // プロアクティブなトークン更新をスケジュール
+      scheduleTokenRefresh();
 
       onSuccess?.(res);
       // ログイン成功後、ユーザー情報ページへリダイレクト
