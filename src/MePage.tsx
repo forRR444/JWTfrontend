@@ -30,10 +30,12 @@ export default function MePage({ onLogout }: { onLogout: () => void }) {
       try {
         const data = await apiFetch<Me>("/me", { token });
         setMe(data);
-      } catch (e: any) {
-        setError(
-          e?.message ?? "認証が切れています。ログインし直してください。"
-        );
+      } catch (e: unknown) {
+        const message =
+          e && typeof e === "object" && "message" in e && typeof e.message === "string"
+            ? e.message
+            : "認証が切れています。ログインし直してください。";
+        setError(message);
       }
     })();
   }, [token, navigate]);

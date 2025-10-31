@@ -6,7 +6,7 @@ import {
   useNavigate,
   useLocation,
 } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Login from "./Login";
 import SignUp from "./SignUp";
 import MePage from "./MePage";
@@ -32,7 +32,7 @@ function isAccessTokenExpired(): boolean {
 function AuthBridge({ setToken }: { setToken: (t: string | null) => void }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const publicPaths = new Set<string>(["/login", "/signup"]);
+  const publicPaths = useMemo(() => new Set<string>(["/login", "/signup"]), []);
 
   useEffect(() => {
     // 起動時：期限切れならログアウト
@@ -88,7 +88,7 @@ function AuthBridge({ setToken }: { setToken: (t: string | null) => void }) {
       window.removeEventListener("unauthorized", onUnauthorized);
       window.removeEventListener("authorized", onAuthorized);
     };
-  }, [navigate, setToken, location.pathname]);
+  }, [navigate, setToken, location.pathname, publicPaths]);
 
   return null;
 }
