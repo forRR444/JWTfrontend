@@ -2,9 +2,9 @@
  * 食事リスト表示コンポーネント
  * ビューモード（日/週/月）に応じて異なる形式で食事を表示
  */
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import type { Meal } from "../../api";
-import { MEAL_TYPE_LABELS, MEAL_TYPES_ORDER } from "../../constants/mealTypes";
+import { MEAL_TYPE_LABELS, MEAL_TYPES_ORDER, MEAL_TYPES } from "../../constants/mealTypes";
 import type { ViewMode } from "../../utils/dateUtils";
 import styles from "../../styles/meals.module.css";
 
@@ -19,6 +19,7 @@ interface MealListViewProps {
   } | null;
   allMealsInRange: Meal[];
   onDelete: (id: number) => Promise<void>;
+  onUpdate: (id: number, data: Partial<Meal>) => Promise<void>;
 }
 
 /**
@@ -31,16 +32,17 @@ export const MealListView: React.FC<MealListViewProps> = ({
   groups,
   allMealsInRange,
   onDelete,
+  onUpdate,
 }) => {
   if (!groups) {
     return <p>データがありません</p>;
   }
 
   if (viewMode === "day") {
-    return <DayView groups={groups} onDelete={onDelete} />;
+    return <DayView groups={groups} onDelete={onDelete} onUpdate={onUpdate} />;
   }
 
-  return <WeekMonthView viewMode={viewMode} allMealsInRange={allMealsInRange} onDelete={onDelete} />;
+  return <WeekMonthView viewMode={viewMode} allMealsInRange={allMealsInRange} onDelete={onDelete} onUpdate={onUpdate} />;
 };
 
 /**
@@ -50,7 +52,8 @@ export const MealListView: React.FC<MealListViewProps> = ({
 const DayView: React.FC<{
   groups: MealListViewProps["groups"];
   onDelete: (id: number) => Promise<void>;
-}> = ({ groups, onDelete }) => {
+  onUpdate: (id: number, data: Partial<Meal>) => Promise<void>;
+}> = ({ groups, onDelete, onUpdate }) => {
   if (!groups) return null;
 
   return (
@@ -74,7 +77,7 @@ const DayView: React.FC<{
 
             <ul className={styles.mealList}>
               {items.map((m) => (
-                <MealItem key={m.id} meal={m} onDelete={onDelete} showDate={false} />
+                <MealItem key={m.id} meal={m} onDelete={onDelete} onUpdate={onUpdate} showDate={false} />
               ))}
             </ul>
           </section>
@@ -92,7 +95,8 @@ const WeekMonthView: React.FC<{
   viewMode: ViewMode;
   allMealsInRange: Meal[];
   onDelete: (id: number) => Promise<void>;
-}> = ({ viewMode, allMealsInRange, onDelete }) => {
+  onUpdate: (id: number, data: Partial<Meal>) => Promise<void>;
+}> = ({ viewMode, allMealsInRange, onDelete, onUpdate }) => {
   return (
     <div className={styles.weekMonthContainer}>
       <h3 className={styles.weekMonthTitle}>
@@ -101,7 +105,7 @@ const WeekMonthView: React.FC<{
       {allMealsInRange.length > 0 ? (
         <ul className={styles.mealList}>
           {allMealsInRange.map((m) => (
-            <MealItem key={m.id} meal={m} onDelete={onDelete} showDate={true} />
+            <MealItem key={m.id} meal={m} onDelete={onDelete} onUpdate={onUpdate} showDate={true} />
           ))}
         </ul>
       ) : (
@@ -119,8 +123,11 @@ const WeekMonthView: React.FC<{
 const MealItem: React.FC<{
   meal: Meal;
   onDelete: (id: number) => Promise<void>;
+  onUpdate: (id: number, data: Partial<Meal>) => Promise<void>;
   showDate: boolean;
-}> = ({ meal, onDelete, showDate }) => {
+}> = ({ meal, onDelete, onUpdate, showDate }) => {
+  const [isEditing, setIsEditing] = useState(false);
+
   // タグごとの色定義
   const tagColors: Record<string, string> = {
     外食: "#ef4444",      // 赤
@@ -152,9 +159,12 @@ const MealItem: React.FC<{
           <div className={styles.mealItemName}>
             {meal.content}
           </div>
+          <div className={styles.mealItemCalories}>
+            {meal.calories ?? "-"} kcal
+          </div>
           <div className={styles.mealItemDetails}>
             <div>
-              カロリー: {meal.calories ?? "-"} kcal / 重量: {meal.grams ?? "-"} g
+              グラム数: {meal.grams ?? "-"} g
             </div>
             {(meal.protein || meal.fat || meal.carbohydrate) && (
               <div className={styles.mealItemNutrition}>
@@ -181,10 +191,216 @@ const MealItem: React.FC<{
             </div>
           )}
         </div>
-        <button onClick={() => onDelete(meal.id)} className={styles.mealDeleteButton}>
-          削除
-        </button>
+        <div style={{ display: "flex", gap: "8px" }}>
+          <button onClick={() => setIsEditing(true)} className={styles.mealDeleteButton}>
+            編集
+          </button>
+          <button onClick={() => onDelete(meal.id)} className={styles.mealDeleteButton}>
+            削除
+          </button>
+        </div>
       </div>
+      {isEditing && (
+        <EditMealModal
+          meal={meal}
+          onClose={() => setIsEditing(false)}
+          onUpdate={onUpdate}
+        />
+      )}
     </li>
+  );
+};
+
+/**
+ * 食事編集モーダル
+ */
+const EditMealModal: React.FC<{
+  meal: Meal;
+  onClose: () => void;
+  onUpdate: (id: number, data: Partial<Meal>) => Promise<void>;
+}> = ({ meal, onClose, onUpdate }) => {
+  const [content, setContent] = useState(meal.content);
+  const [mealType, setMealType] = useState(meal.meal_type);
+  const [calories, setCalories] = useState(String(meal.calories ?? ""));
+  const [grams, setGrams] = useState(String(meal.grams ?? ""));
+  const [protein, setProtein] = useState(String(meal.protein ?? ""));
+  const [fat, setFat] = useState(String(meal.fat ?? ""));
+  const [carbohydrate, setCarbohydrate] = useState(String(meal.carbohydrate ?? ""));
+  const [tags, setTags] = useState<string[]>(meal.tags || []);
+  const [showTagSelector, setShowTagSelector] = useState(false);
+  const tagSelectorRef = useRef<HTMLDivElement>(null);
+
+  const availableTags = ["外食", "自炊", "和食", "洋食", "中華", "韓国料理", "イタリアン"];
+
+  // モーダル表示時に背景のスクロールを防ぐ
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
+  // タグセレクターの外側クリックで閉じる
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (tagSelectorRef.current && !tagSelectorRef.current.contains(event.target as Node)) {
+        setShowTagSelector(false);
+      }
+    };
+
+    if (showTagSelector) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showTagSelector]);
+
+  const handleTagToggle = (tag: string) => {
+    setTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await onUpdate(meal.id, {
+      content,
+      meal_type: mealType,
+      calories: calories ? Number(calories) : undefined,
+      grams: grams ? Number(grams) : undefined,
+      protein: protein ? Number(protein) : undefined,
+      fat: fat ? Number(fat) : undefined,
+      carbohydrate: carbohydrate ? Number(carbohydrate) : undefined,
+      tags,
+    });
+    onClose();
+  };
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+        <h3 className={styles.modalTitle}>食事を編集</h3>
+        <form onSubmit={handleSubmit} className={styles.modalForm}>
+          <div className={styles.modalFormGroup}>
+            <label className={styles.modalLabel}>食事内容</label>
+            <input
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              required
+              className={styles.modalInput}
+            />
+          </div>
+
+          <div className={styles.modalFormGroup}>
+            <label className={styles.modalLabel}>食事のタイミング</label>
+            <select
+              value={mealType}
+              onChange={(e) => setMealType(e.target.value as Meal["meal_type"])}
+              className={styles.modalInput}
+            >
+              {MEAL_TYPES.map((mt) => (
+                <option key={mt} value={mt}>
+                  {MEAL_TYPE_LABELS[mt]}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.modalFormGroup}>
+            <label className={styles.modalLabel}>カロリー (kcal)</label>
+            <input
+              type="number"
+              step="0.1"
+              value={calories}
+              onChange={(e) => setCalories(e.target.value)}
+              className={styles.modalInput}
+            />
+          </div>
+
+          <div className={styles.modalFormGroup}>
+            <label className={styles.modalLabel}>グラム数 (g)</label>
+            <input
+              type="number"
+              step="0.1"
+              value={grams}
+              onChange={(e) => setGrams(e.target.value)}
+              className={styles.modalInput}
+            />
+          </div>
+
+          <div className={styles.modalFormGroup}>
+            <label className={styles.modalLabel}>タンパク質 (g)</label>
+            <input
+              type="number"
+              step="0.1"
+              value={protein}
+              onChange={(e) => setProtein(e.target.value)}
+              className={styles.modalInput}
+            />
+          </div>
+
+          <div className={styles.modalFormGroup}>
+            <label className={styles.modalLabel}>脂質 (g)</label>
+            <input
+              type="number"
+              step="0.1"
+              value={fat}
+              onChange={(e) => setFat(e.target.value)}
+              className={styles.modalInput}
+            />
+          </div>
+
+          <div className={styles.modalFormGroup}>
+            <label className={styles.modalLabel}>炭水化物 (g)</label>
+            <input
+              type="number"
+              step="0.1"
+              value={carbohydrate}
+              onChange={(e) => setCarbohydrate(e.target.value)}
+              className={styles.modalInput}
+            />
+          </div>
+
+          <div className={styles.modalFormGroup}>
+            <label className={styles.modalLabel}>タグ</label>
+            <div className={styles.tagSelector} ref={tagSelectorRef}>
+              <button
+                type="button"
+                onClick={() => setShowTagSelector(!showTagSelector)}
+                className={styles.tagSelectorButton}
+              >
+                {tags.length > 0 ? `選択中: ${tags.join(", ")}` : "タグを選択"}
+              </button>
+              {showTagSelector && (
+                <div className={styles.tagDropdown}>
+                  {availableTags.map((tag) => (
+                    <label key={tag} className={styles.tagCheckboxLabel}>
+                      <input
+                        type="checkbox"
+                        checked={tags.includes(tag)}
+                        onChange={() => handleTagToggle(tag)}
+                        className={styles.tagCheckbox}
+                      />
+                      <span className={styles.tagCheckboxText}>{tag}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className={styles.modalButtonGroup}>
+            <button type="button" onClick={onClose} className={styles.modalButtonCancel}>
+              キャンセル
+            </button>
+            <button type="submit" className={styles.modalButtonSubmit}>
+              保存
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 };
