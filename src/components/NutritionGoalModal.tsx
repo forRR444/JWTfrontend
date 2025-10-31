@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from "react";
 import type { User } from "../types";
 import { updateNutritionGoals, type NutritionGoals } from "../api";
+import styles from "../styles/meals.module.css";
 
 interface NutritionGoalModalProps {
   user: User;
@@ -63,132 +64,101 @@ export const NutritionGoalModal: React.FC<NutritionGoalModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: "rgba(0, 0, 0, 0.5)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 1000,
-      }}
-      onClick={onClose}
-    >
-      <div
-        style={{
-          backgroundColor: "white",
-          padding: 24,
-          borderRadius: 8,
-          maxWidth: 500,
-          width: "90%",
-          maxHeight: "90vh",
-          overflow: "auto",
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 style={{ marginTop: 0 }}>栄養目標を設定</h2>
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+        <h2 className={styles.modalTitle}>栄養目標を設定</h2>
 
-        {error && <p style={{ color: "crimson", margin: "8px 0" }}>{error}</p>}
+        {error && <p className={styles.error}>{error}</p>}
 
-        <form onSubmit={handleSubmit} style={{ display: "grid", gap: 16 }}>
-          <label>
-            目標カロリー (kcal)
+        <form onSubmit={handleSubmit} className={styles.modalForm}>
+          <div className={styles.modalFormGroup}>
+            <label htmlFor="calories" className={styles.modalLabel}>
+              目標カロリー (kcal)
+            </label>
             <input
+              id="calories"
               type="number"
               inputMode="numeric"
               value={calories}
               onChange={(e) => setCalories(e.target.value)}
               placeholder="例: 2000"
-              style={{ width: "100%", padding: 8, fontSize: 16 }}
+              className={styles.modalInput}
             />
-          </label>
+          </div>
 
-          <label>
-            目標たんぱく質 (g)
+          <div className={styles.modalFormGroup}>
+            <label htmlFor="protein" className={styles.modalLabel}>
+              目標たんぱく質 (g)
+            </label>
             <input
+              id="protein"
               type="number"
               inputMode="numeric"
               step="0.1"
               value={protein}
               onChange={(e) => setProtein(e.target.value)}
               placeholder="例: 60"
-              style={{ width: "100%", padding: 8, fontSize: 16 }}
+              className={styles.modalInput}
             />
-          </label>
+          </div>
 
-          <label>
-            目標脂質 (g)
+          <div className={styles.modalFormGroup}>
+            <label htmlFor="fat" className={styles.modalLabel}>
+              目標脂質 (g)
+            </label>
             <input
+              id="fat"
               type="number"
               inputMode="numeric"
               step="0.1"
               value={fat}
               onChange={(e) => setFat(e.target.value)}
               placeholder="例: 50"
-              style={{ width: "100%", padding: 8, fontSize: 16 }}
+              className={styles.modalInput}
             />
-          </label>
+          </div>
 
-          <label>
-            目標炭水化物 (g)
+          <div className={styles.modalFormGroup}>
+            <label htmlFor="carbohydrate" className={styles.modalLabel}>
+              目標炭水化物 (g)
+            </label>
             <input
+              id="carbohydrate"
               type="number"
               inputMode="numeric"
               step="0.1"
               value={carbohydrate}
               onChange={(e) => setCarbohydrate(e.target.value)}
               placeholder="例: 250"
-              style={{ width: "100%", padding: 8, fontSize: 16 }}
+              className={styles.modalInput}
             />
-          </label>
+          </div>
 
-          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+          <div className={styles.modalButtonGroup}>
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              style={{
-                flex: 1,
-                padding: 12,
-                fontSize: 16,
-                backgroundColor: "#6c757d",
-                color: "white",
-                border: "none",
-                borderRadius: 4,
-                cursor: loading ? "not-allowed" : "pointer",
-              }}
+              className={styles.modalButtonCancel}
             >
               キャンセル
             </button>
             <button
               type="submit"
               disabled={loading}
-              style={{
-                flex: 1,
-                padding: 12,
-                fontSize: 16,
-                backgroundColor: "#007bff",
-                color: "white",
-                border: "none",
-                borderRadius: 4,
-                cursor: loading ? "not-allowed" : "pointer",
-              }}
+              className={styles.modalButtonSubmit}
             >
               {loading ? "保存中..." : "保存"}
             </button>
           </div>
         </form>
 
-        <div style={{ marginTop: 16, fontSize: 14, color: "#666" }}>
-          <p style={{ margin: "4px 0" }}>
-            💡 目標値は1日あたりの推奨摂取量です
+        <div className={styles.modalHints}>
+          <p className={styles.modalHint}>
+            目標値は1日あたりの推奨摂取量です
           </p>
-          <p style={{ margin: "4px 0" }}>
-            💡 空欄にすると目標は未設定になります
+          <p className={styles.modalHint}>
+            空欄にすると目標は未設定になります
           </p>
         </div>
       </div>
