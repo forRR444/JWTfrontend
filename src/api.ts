@@ -1,4 +1,4 @@
-import type { LoginResponse } from "./types";
+import type { LoginResponse, Food, User } from "./types";
 
 const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || "http://localhost:3000";
 const API_BASE = `${API_ORIGIN}/api/v1`;
@@ -258,6 +258,9 @@ export interface Meal {
   content: string;
   calories?: number | null;
   grams?: number | null;
+  protein?: number | null;
+  fat?: number | null;
+  carbohydrate?: number | null;
   tags: string[];
   eaten_on: string;
   created_at: string;
@@ -277,6 +280,9 @@ export function createMeal(
       content: meal.content,
       calories: meal.calories,
       grams: meal.grams,
+      protein: meal.protein,
+      fat: meal.fat,
+      carbohydrate: meal.carbohydrate,
       tags: meal.tags || [],
       eaten_on: meal.eaten_on,
     },
@@ -291,6 +297,9 @@ export function updateMeal(id: number, meal: Partial<Meal>) {
       content: meal.content,
       calories: meal.calories,
       grams: meal.grams,
+      protein: meal.protein,
+      fat: meal.fat,
+      carbohydrate: meal.carbohydrate,
       tags: meal.tags,
       eaten_on: meal.eaten_on,
     },
@@ -333,4 +342,34 @@ export function getCalendarMonth(month: string) {
     month: string;
     days: Record<string, { total: number; by_type: Record<string, number> }>;
   }>(`/meals/calendar?month=${encodeURIComponent(month)}`);
+}
+
+// === Foods API ===
+export function searchFoods(query: string) {
+  if (!query.trim()) {
+    return Promise.resolve({ foods: [] });
+  }
+  return apiFetch<{ foods: Food[] }>(
+    `/foods?q=${encodeURIComponent(query)}`
+  );
+}
+
+// === User API ===
+export function fetchMe() {
+  return apiFetch<User>("/me");
+}
+
+// === User Goals API ===
+export interface NutritionGoals {
+  target_calories?: number;
+  target_protein?: number;
+  target_fat?: number;
+  target_carbohydrate?: number;
+}
+
+export function updateNutritionGoals(goals: NutritionGoals) {
+  return apiFetch<User>("/users/goals", {
+    method: "PUT",
+    body: { user: goals },
+  });
 }
