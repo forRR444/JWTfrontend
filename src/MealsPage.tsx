@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { createMeal, deleteMeal, refreshToken, scheduleTokenRefresh } from "./api";
+import { createMeal, deleteMeal, refreshToken, scheduleTokenRefresh, fetchMe } from "./api";
 import { clearAuth } from "./auth";
+import type { User } from "./types";
 import type { ViewMode } from "./utils/dateUtils";
 import {
   getTodayString,
@@ -17,11 +18,15 @@ import { DateNavigator } from "./components/meals/DateNavigator";
 import { MealForm } from "./components/meals/MealForm";
 import { TotalCalories } from "./components/meals/TotalCalories";
 import { MealListView } from "./components/meals/MealListView";
+import { NutritionSummary } from "./components/NutritionSummary";
+import { NutritionGoalModal } from "./components/NutritionGoalModal";
 
 export default function MealsPage() {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>("day");
   const [selectedDate, setSelectedDate] = useState<string>(getTodayString());
+  const [user, setUser] = useState<User | null>(null);
+  const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
 
   const { loading, error, groups, allMealsInRange, refetch } = useMealData(
     viewMode,
@@ -71,6 +76,18 @@ export default function MealsPage() {
     return allMeals.reduce((sum, m) => sum + (m.calories || 0), 0);
   };
 
+  // ユーザー情報を取得
+  useEffect(() => {
+    fetchMe()
+      .then((userData) => setUser(userData))
+      .catch((err) => console.error("Failed to fetch user:", err));
+  }, []);
+
+  // ユーザー情報更新後の処理
+  const handleUserUpdate = (updatedUser: User) => {
+    setUser(updatedUser);
+  };
+
   return (
     <div style={{ maxWidth: 720, margin: "32px auto", padding: 16 }}>
       {/* ヘッダー */}
@@ -100,6 +117,15 @@ export default function MealsPage() {
       {/* 食事フォーム */}
       <MealForm selectedDate={selectedDate} onSubmit={handleMealSubmit} />
 
+      {/* 栄養サマリー（日次表示のみ） */}
+      {viewMode === "day" && user && (
+        <NutritionSummary
+          meals={allMealsInRange}
+          user={user}
+          onOpenGoalModal={() => setIsGoalModalOpen(true)}
+        />
+      )}
+
       {/* データ表示 */}
       {loading ? (
         <p>読み込み中...</p>
@@ -118,6 +144,16 @@ export default function MealsPage() {
             onDelete={handleMealDelete}
           />
         </>
+      )}
+
+      {/* 目標設定モーダル */}
+      {user && (
+        <NutritionGoalModal
+          user={user}
+          isOpen={isGoalModalOpen}
+          onClose={() => setIsGoalModalOpen(false)}
+          onUpdate={handleUserUpdate}
+        />
       )}
     </div>
   );
