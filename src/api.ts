@@ -10,6 +10,8 @@ function hardSignOut() {
     localStorage.removeItem("access_token_expires");
     localStorage.removeItem("current_user");
   } finally {
+    // ユーザーに通知してからログイン画面に戻る
+    alert("認証が切れました。ログイン画面に戻ります。");
     // どこからでも拾えるようにアプリ全体へ通知
     window.dispatchEvent(new Event("unauthorized"));
   }
