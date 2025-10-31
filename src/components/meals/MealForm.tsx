@@ -2,7 +2,7 @@
  * 食事入力フォームコンポーネント
  * 食事の種類、内容、カロリー、グラム数、タグを入力
  */
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import type { Meal } from "../../api";
 import type { Food } from "../../types";
 import { MEAL_TYPES, MEAL_TYPE_LABELS } from "../../constants/mealTypes";
@@ -33,7 +33,7 @@ export const MealForm: React.FC<MealFormProps> = ({ selectedDate, onSubmit }) =>
   const [content, setContent] = useState("");
   const [mealType, setMealType] = useState<Meal["meal_type"]>("other");
   const [calories, setCalories] = useState("");
-  const [grams, setGrams] = useState("100");
+  const [grams, setGrams] = useState("");
   const [protein, setProtein] = useState("");
   const [fat, setFat] = useState("");
   const [carbohydrate, setCarbohydrate] = useState("");
@@ -41,10 +41,29 @@ export const MealForm: React.FC<MealFormProps> = ({ selectedDate, onSubmit }) =>
   const [error, setError] = useState<string | null>(null);
   const [searchResults, setSearchResults] = useState<Food[]>([]);
   const [searching, setSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [showTagSelector, setShowTagSelector] = useState(false);
+  const tagSelectorRef = useRef<HTMLDivElement>(null);
 
   const availableTags = ["外食", "自炊", "和食", "洋食", "中華", "韓国料理", "イタリアン"];
+
+  // タグセレクターの外側クリックで閉じる
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (tagSelectorRef.current && !tagSelectorRef.current.contains(event.target as Node)) {
+        setShowTagSelector(false);
+      }
+    };
+
+    if (showTagSelector) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showTagSelector]);
 
   const handleTagToggle = (tag: string) => {
     setTags((prev) =>
@@ -55,6 +74,7 @@ export const MealForm: React.FC<MealFormProps> = ({ selectedDate, onSubmit }) =>
   const handleSearch = async () => {
     if (!content.trim()) {
       setSearchResults([]);
+      setHasSearched(false);
       return;
     }
 
@@ -64,9 +84,11 @@ export const MealForm: React.FC<MealFormProps> = ({ selectedDate, onSubmit }) =>
     try {
       const response = await searchFoods(content.trim());
       setSearchResults(response.foods);
+      setHasSearched(true);
     } catch (e: any) {
       setError(e?.message || "検索に失敗しました");
       setSearchResults([]);
+      setHasSearched(true);
     } finally {
       setSearching(false);
     }
@@ -89,6 +111,7 @@ export const MealForm: React.FC<MealFormProps> = ({ selectedDate, onSubmit }) =>
       setCarbohydrate(String(food.carbohydrate));
     }
     setSearchResults([]);
+    setHasSearched(false);
     setShowDetails(true); // 検索結果から選んだ場合は詳細を自動表示
   };
 
@@ -97,6 +120,12 @@ export const MealForm: React.FC<MealFormProps> = ({ selectedDate, onSubmit }) =>
       e.preventDefault();
       handleSearch();
     }
+  };
+
+  const handleClearContent = () => {
+    setContent("");
+    setSearchResults([]);
+    setHasSearched(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -123,13 +152,14 @@ export const MealForm: React.FC<MealFormProps> = ({ selectedDate, onSubmit }) =>
       setContent("");
       setMealType("other");
       setCalories("");
-      setGrams("100");
+      setGrams("");
       setProtein("");
       setFat("");
       setCarbohydrate("");
       setTags([]);
       setError(null);
       setSearchResults([]);
+      setHasSearched(false);
       setShowDetails(false);
     } catch (e: any) {
       setError(e?.message || "作成に失敗しました");
@@ -142,65 +172,7 @@ export const MealForm: React.FC<MealFormProps> = ({ selectedDate, onSubmit }) =>
       <form onSubmit={handleSubmit} className={styles.form}>
         {error && <p className={styles.error}>{error}</p>}
 
-        {/* 重要度: 高 - 種類、カロリー、タグ */}
-        <div className={`${styles.formRow} ${styles.formRow3Col}`}>
-          <div className={styles.formGroup}>
-            <label htmlFor="mealType" className={styles.label}>種類</label>
-            <select
-              id="mealType"
-              value={mealType}
-              onChange={(e) => setMealType(e.target.value as any)}
-              className={styles.select}
-            >
-              {MEAL_TYPES.map((mt) => (
-                <option key={mt} value={mt}>
-                  {MEAL_TYPE_LABELS[mt]}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className={styles.formGroup}>
-            <label htmlFor="calories" className={styles.label}>カロリー (kcal)</label>
-            <input
-              id="calories"
-              type="number"
-              inputMode="numeric"
-              step="0.1"
-              value={calories}
-              onChange={(e) => setCalories(e.target.value)}
-              className={styles.input}
-              placeholder="200"
-            />
-          </div>
-          <div className={styles.formGroup}>
-            <label className={styles.label}>タグ</label>
-            <div className={styles.tagSelector}>
-              <button
-                type="button"
-                onClick={() => setShowTagSelector(!showTagSelector)}
-                className={styles.tagSelectorButton}
-              >
-                {tags.length > 0 ? `選択中: ${tags.join(", ")}` : "タグを選択"}
-              </button>
-              {showTagSelector && (
-                <div className={styles.tagDropdown}>
-                  {availableTags.map((tag) => (
-                    <label key={tag} className={styles.tagCheckboxLabel}>
-                      <input
-                        type="checkbox"
-                        checked={tags.includes(tag)}
-                        onChange={() => handleTagToggle(tag)}
-                        className={styles.tagCheckbox}
-                      />
-                      <span className={styles.tagCheckboxText}>{tag}</span>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
+        {/* 食事内容 */}
         <div className={styles.formGroup}>
           <label htmlFor="content" className={`${styles.label} ${styles.labelRequired}`}>
             食事内容
@@ -215,6 +187,16 @@ export const MealForm: React.FC<MealFormProps> = ({ selectedDate, onSubmit }) =>
               required
               className={styles.inputFlex}
             />
+            {content && (
+              <button
+                type="button"
+                onClick={handleClearContent}
+                className={styles.clearButton}
+                aria-label="入力をクリア"
+              >
+                ×
+              </button>
+            )}
             <button
               type="button"
               onClick={handleSearch}
@@ -248,6 +230,71 @@ export const MealForm: React.FC<MealFormProps> = ({ selectedDate, onSubmit }) =>
             ))}
           </div>
         )}
+
+        {hasSearched && searchResults.length === 0 && (
+          <div className={styles.searchResults}>
+            <p className={styles.error}>該当する食品が見つかりませんでした。</p>
+          </div>
+        )}
+
+        {/* 食事のタイミング、カロリー、タグ */}
+        <div className={`${styles.formRow} ${styles.formRow3Col}`}>
+          <div className={styles.formGroup}>
+            <label htmlFor="mealType" className={styles.label}>食事のタイミング</label>
+            <select
+              id="mealType"
+              value={mealType}
+              onChange={(e) => setMealType(e.target.value as any)}
+              className={styles.select}
+            >
+              {MEAL_TYPES.map((mt) => (
+                <option key={mt} value={mt}>
+                  {MEAL_TYPE_LABELS[mt]}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className={styles.formGroup}>
+            <label htmlFor="calories" className={styles.label}>カロリー (kcal)</label>
+            <input
+              id="calories"
+              type="number"
+              inputMode="numeric"
+              step="0.1"
+              value={calories}
+              onChange={(e) => setCalories(e.target.value)}
+              className={styles.input}
+              placeholder="200"
+            />
+          </div>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>タグ</label>
+            <div className={styles.tagSelector} ref={tagSelectorRef}>
+              <button
+                type="button"
+                onClick={() => setShowTagSelector(!showTagSelector)}
+                className={styles.tagSelectorButton}
+              >
+                {tags.length > 0 ? `選択中: ${tags.join(", ")}` : "タグを選択"}
+              </button>
+              {showTagSelector && (
+                <div className={styles.tagDropdown}>
+                  {availableTags.map((tag) => (
+                    <label key={tag} className={styles.tagCheckboxLabel}>
+                      <input
+                        type="checkbox"
+                        checked={tags.includes(tag)}
+                        onChange={() => handleTagToggle(tag)}
+                        className={styles.tagCheckbox}
+                      />
+                      <span className={styles.tagCheckboxText}>{tag}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
 
         {/* 詳細入力ボタン */}
         <button
