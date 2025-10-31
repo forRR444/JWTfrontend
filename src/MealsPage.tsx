@@ -6,6 +6,7 @@ import {
   updateMeal,
   refreshToken,
   fetchMe,
+  type Meal,
 } from "./api";
 import { clearAuth } from "./auth";
 import type { User } from "./types";
@@ -71,13 +72,17 @@ export default function MealsPage() {
     try {
       await refreshToken();
       alert("アクセストークンを更新しました");
-    } catch (e: any) {
-      alert(e?.message || "更新に失敗。再ログインしてください");
+    } catch (e: unknown) {
+      const message =
+        e && typeof e === "object" && "message" in e && typeof e.message === "string"
+          ? e.message
+          : "更新に失敗。再ログインしてください";
+      alert(message);
     }
   };
 
   // 追加 / 削除 / 更新：成功時は一覧再取得のみ（ロジックはAPI層へ委譲）
-  const handleMealSubmit = async (mealData: any) => {
+  const handleMealSubmit = async (mealData: Partial<Meal> & { content: string }) => {
     await createMeal(mealData);
     refetch();
   };
@@ -88,17 +93,25 @@ export default function MealsPage() {
     try {
       await deleteMeal(id);
       refetch();
-    } catch (e: any) {
-      alert(e?.message || "削除に失敗しました");
+    } catch (e: unknown) {
+      const message =
+        e && typeof e === "object" && "message" in e && typeof e.message === "string"
+          ? e.message
+          : "削除に失敗しました";
+      alert(message);
     }
   };
 
-  const handleMealUpdate = async (id: number, data: any) => {
+  const handleMealUpdate = async (id: number, data: Partial<Meal>) => {
     try {
       await updateMeal(id, data);
       refetch();
-    } catch (e: any) {
-      alert(e?.message || "更新に失敗しました");
+    } catch (e: unknown) {
+      const message =
+        e && typeof e === "object" && "message" in e && typeof e.message === "string"
+          ? e.message
+          : "更新に失敗しました";
+      alert(message);
     }
   };
 
