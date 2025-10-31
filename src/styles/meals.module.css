@@ -14,8 +14,8 @@
   background: #ffffff;
   border: 1px solid #e0e0e0;
   border-radius: 4px;
-  padding: 20px;
-  margin-bottom: 24px;
+  padding: 16px;
+  margin-bottom: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   max-width: 720px;
 }
@@ -24,18 +24,18 @@
   font-size: 16px;
   font-weight: 600;
   color: #1a1a1a;
-  margin: 0 0 16px 0;
+  margin: 0 0 12px 0;
 }
 
 /* フォーム */
 .form {
   display: grid;
-  gap: 14px;
+  gap: 8px;
 }
 
 .formRow {
   display: grid;
-  gap: 10px;
+  gap: 6px;
 }
 
 .formRow2Col {
@@ -45,6 +45,9 @@
 @media (min-width: 768px) {
   .formRow3Col {
     grid-template-columns: 1fr 1fr 1fr;
+  }
+  .formRow4Col {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
   }
 }
 
@@ -57,11 +60,11 @@
 .formGroup {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .label {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: #4a4a4a;
 }
@@ -73,8 +76,8 @@
 
 /* 入力フィールド - 基本 */
 .input {
-  padding: 9px 11px;
-  font-size: 14px;
+  padding: 6px 8px;
+  font-size: 13px;
   color: #1a1a1a;
   background: #ffffff;
   border: 1px solid #d0d0d0;
@@ -95,8 +98,8 @@
 
 /* セレクト */
 .select {
-  padding: 9px 11px;
-  font-size: 14px;
+  padding: 6px 8px;
+  font-size: 13px;
   color: #1a1a1a;
   background: #ffffff;
   border: 1px solid #d0d0d0;
@@ -114,14 +117,62 @@
 
 /* 入力フィールド - 小サイズ（重要度低い項目用） */
 .inputSmall {
-  padding: 7px 9px;
-  font-size: 13px;
+  padding: 5px 7px;
+  font-size: 12px;
 }
 
-/* ボタン - フォーム送信 */
-.submitButton {
-  padding: 10px 20px;
-  font-size: 14px;
+/* 入力欄とボタンの組み合わせ */
+.inputWithButtons {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+
+.inputFlex {
+  flex: 1;
+  padding: 6px 8px;
+  font-size: 13px;
+  color: #1a1a1a;
+  background: #ffffff;
+  border: 1px solid #d0d0d0;
+  border-radius: 3px;
+  outline: none;
+  transition: border-color 0.15s ease;
+  font-family: inherit;
+}
+
+.inputFlex:focus {
+  border-color: #4a90e2;
+}
+
+.searchButton {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  background: #ffffff;
+  border: 1px solid #d0d0d0;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.searchButton:hover:not(:disabled) {
+  color: #4a90e2;
+  border-color: #4a90e2;
+  background: #f8f9fa;
+}
+
+.searchButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.addButton {
+  padding: 6px 14px;
+  font-size: 12px;
   font-weight: 500;
   color: #ffffff;
   background: #4a90e2;
@@ -130,22 +181,140 @@
   cursor: pointer;
   transition: background-color 0.15s ease;
   font-family: inherit;
-  justify-self: start;
-  min-width: 100px;
-  max-width: 140px;
+  white-space: nowrap;
 }
 
-.submitButton:hover:not(:disabled) {
+.addButton:hover:not(:disabled) {
   background: #3a7bc8;
 }
 
-.submitButton:active:not(:disabled) {
-  background: #2e6cb0;
-}
-
-.submitButton:disabled {
+.addButton:disabled {
   background: #b0b0b0;
   cursor: not-allowed;
+}
+
+/* 検索結果 */
+.searchResults {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 3px;
+  background: #ffffff;
+}
+
+.searchResultItem {
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.1s ease;
+}
+
+.searchResultItem:last-child {
+  border-bottom: none;
+}
+
+.searchResultItem:hover {
+  background: #f8f9fa;
+}
+
+.searchResultName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.searchResultInfo {
+  font-size: 12px;
+  color: #666;
+}
+
+/* 詳細入力切り替えボタン */
+.toggleDetailsButton {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  background: #ffffff;
+  border: 1px solid #d0d0d0;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  width: 100%;
+}
+
+.toggleDetailsButton:hover {
+  color: #4a90e2;
+  border-color: #4a90e2;
+  background: #f8f9fa;
+}
+
+/* タグセレクター */
+.tagSelector {
+  position: relative;
+}
+
+.tagSelectorButton {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 13px;
+  color: #4a4a4a;
+  background: #ffffff;
+  border: 1px solid #d0d0d0;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+  font-family: inherit;
+  text-align: left;
+}
+
+.tagSelectorButton:hover {
+  border-color: #4a90e2;
+}
+
+.tagDropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #d0d0d0;
+  border-radius: 3px;
+  padding: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tagCheckboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #4a4a4a;
+  user-select: none;
+  padding: 4px;
+  border-radius: 3px;
+  transition: background-color 0.1s ease;
+}
+
+.tagCheckboxLabel:hover {
+  background: #f8f9fa;
+}
+
+.tagCheckbox {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: #4a90e2;
+}
+
+.tagCheckboxText {
+  white-space: nowrap;
 }
 
 /* ビュー切替 */
@@ -263,7 +432,7 @@
 .hint {
   font-size: 12px;
   color: #888;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 /* 栄養素サマリー */
@@ -482,9 +651,20 @@
 }
 
 .mealItemTags {
-  font-size: 12px;
-  color: #888;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
   margin-top: 6px;
+}
+
+.mealTagChip {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #ffffff;
+  border-radius: 10px;
+  white-space: nowrap;
 }
 
 .mealItemTimestamp {
