@@ -1,0 +1,277 @@
+/*
+ * アプリ全体の共通スタイル
+ * シンプルで実務向き / 落ち着いた中立トーン / 読みやすさ優先
+ */
+
+/* ページコンテナ */
+.pageContainer {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+  min-height: 100vh;
+}
+
+@media (min-width: 768px) {
+  .pageContainer {
+    padding: 40px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .pageContainer {
+    max-width: 960px;
+    padding: 48px 64px;
+  }
+}
+
+/* ヘッダー */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.headerTitle {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.headerActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* ナビゲーション */
+.nav {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.navLink {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  text-decoration: none;
+  border-radius: 3px;
+  transition: all 0.15s ease;
+}
+
+.navLink:hover {
+  color: #4a90e2;
+  background: #f8f9fa;
+}
+
+.navLinkActive {
+  color: #4a90e2;
+  background: #e8f4ff;
+}
+
+/* カード */
+.card {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+@media (min-width: 768px) {
+  .card {
+    padding: 32px;
+    margin-bottom: 32px;
+  }
+}
+
+.cardTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 16px 0;
+}
+
+.cardContent {
+  font-size: 14px;
+  color: #4a4a4a;
+  line-height: 1.6;
+}
+
+/* ボタン - プライマリ */
+.button {
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+  background: #4a90e2;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  font-family: inherit;
+}
+
+.button:hover:not(:disabled) {
+  background: #3a7bc8;
+}
+
+.button:active:not(:disabled) {
+  background: #2e6cb0;
+}
+
+.button:disabled {
+  background: #b0b0b0;
+  cursor: not-allowed;
+}
+
+/* ボタン - セカンダリ */
+.buttonSecondary {
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  background: #ffffff;
+  border: 1px solid #d0d0d0;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.buttonSecondary:hover:not(:disabled) {
+  color: #4a90e2;
+  border-color: #4a90e2;
+  background: #f8f9fa;
+}
+
+.buttonSecondary:active:not(:disabled) {
+  background: #e8e9ea;
+}
+
+.buttonSecondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ボタン - 小サイズ */
+.buttonSmall {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+/* ボタン - 危険操作 */
+.buttonDanger {
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+  background: #d32f2f;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  font-family: inherit;
+}
+
+.buttonDanger:hover:not(:disabled) {
+  background: #b71c1c;
+}
+
+.buttonDanger:active:not(:disabled) {
+  background: #8b0000;
+}
+
+.buttonDanger:disabled {
+  background: #b0b0b0;
+  cursor: not-allowed;
+}
+
+/* エラーメッセージ */
+.error {
+  font-size: 14px;
+  color: #d32f2f;
+  padding: 12px 16px;
+  background: #ffebee;
+  border-radius: 3px;
+  border-left: 3px solid #d32f2f;
+  margin-bottom: 16px;
+}
+
+/* 読み込み中 */
+.loading {
+  font-size: 14px;
+  color: #666;
+  padding: 32px;
+  text-align: center;
+}
+
+/* セクション */
+.section {
+  margin-bottom: 32px;
+}
+
+@media (min-width: 768px) {
+  .section {
+    margin-bottom: 48px;
+  }
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 16px 0;
+}
+
+@media (min-width: 768px) {
+  .sectionTitle {
+    font-size: 18px;
+    margin: 0 0 20px 0;
+  }
+}
+
+/* インフォメーション */
+.infoRow {
+  display: flex;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.infoRow:last-child {
+  border-bottom: none;
+}
+
+.infoLabel {
+  flex: 0 0 120px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+}
+
+.infoValue {
+  flex: 1;
+  font-size: 14px;
+  color: #1a1a1a;
+}
+
+@media (min-width: 768px) {
+  .infoRow {
+    padding: 16px 0;
+  }
+
+  .infoLabel {
+    flex: 0 0 160px;
+    font-size: 14px;
+  }
+
+  .infoValue {
+    font-size: 15px;
+  }
+}
