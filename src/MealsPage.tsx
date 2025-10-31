@@ -24,44 +24,55 @@ import mealStyles from "./styles/meals.module.css";
 
 export default function MealsPage() {
   const navigate = useNavigate();
+
+  // ビュー状態
   const [viewMode, setViewMode] = useState<ViewMode>("day");
   const [selectedDate, setSelectedDate] = useState<string>(getTodayString());
+
+  // ユーザー状態
   const [user, setUser] = useState<User | null>(null);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
 
+  // 食事データの取得
   const { loading, error, groups, allMealsInRange, refetch } = useMealData(
     viewMode,
     selectedDate
   );
 
-  // ログアウト
+  // ユーザー情報を取得
+  useEffect(() => {
+    fetchMe()
+      .then((userData) => setUser(userData))
+      .catch((err) => console.error("Failed to fetch user:", err));
+  }, []);
+
+  // ログアウト処理
   const handleLogoutClick = () => {
     clearAuth();
     window.dispatchEvent(new Event("unauthorized"));
     navigate("/login", { replace: true });
   };
 
-  // トークン更新
+  // トークン更新処理
   const handleRefreshToken = async () => {
     try {
       await refreshToken();
-      // refreshToken() 内で既にlocalStorageとイベント発火、
-      // scheduleTokenRefresh() も実行済み
       alert("アクセストークンを更新しました");
     } catch (e: any) {
       alert(e?.message || "更新に失敗。再ログインしてください");
     }
   };
 
-  // 食事追加
+  // 食事追加処理
   const handleMealSubmit = async (mealData: any) => {
     await createMeal(mealData);
     refetch();
   };
 
-  // 食事削除
+  // 食事削除処理
   const handleMealDelete = async (id: number) => {
     if (!confirm("削除しますか？")) return;
+
     try {
       await deleteMeal(id);
       refetch();
@@ -70,7 +81,7 @@ export default function MealsPage() {
     }
   };
 
-  // 食事更新
+  // 食事更新処理
   const handleMealUpdate = async (id: number, data: any) => {
     try {
       await updateMeal(id, data);
@@ -80,14 +91,7 @@ export default function MealsPage() {
     }
   };
 
-  // ユーザー情報を取得
-  useEffect(() => {
-    fetchMe()
-      .then((userData) => setUser(userData))
-      .catch((err) => console.error("Failed to fetch user:", err));
-  }, []);
-
-  // ユーザー情報更新後の処理
+  // ユーザー情報更新処理
   const handleUserUpdate = (updatedUser: User) => {
     setUser(updatedUser);
   };
@@ -143,8 +147,10 @@ export default function MealsPage() {
           />
         )}
 
-        {/* 食事フォーム */}
-        <MealForm selectedDate={selectedDate} onSubmit={handleMealSubmit} />
+        {/* 食事フォーム（日次表示のみ） */}
+        {viewMode === "day" && (
+          <MealForm selectedDate={selectedDate} onSubmit={handleMealSubmit} />
+        )}
 
         {/* データ表示 */}
         {loading ? (
