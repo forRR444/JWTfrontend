@@ -20,13 +20,11 @@ interface NutritionTotals {
   carbohydrate: number;
 }
 
-export const NutritionSummary: React.FC<NutritionSummaryProps> = ({
-  meals,
-  user,
-  onOpenGoalModal,
-}) => {
-  // 栄養素の合計を計算
-  const totals: NutritionTotals = meals.reduce(
+/**
+ * 食事リストから栄養素の合計を計算
+ */
+const calculateNutritionTotals = (meals: Meal[]): NutritionTotals => {
+  return meals.reduce(
     (acc, meal) => ({
       calories: acc.calories + (Number(meal.calories) || 0),
       protein: acc.protein + (Number(meal.protein) || 0),
@@ -35,12 +33,27 @@ export const NutritionSummary: React.FC<NutritionSummaryProps> = ({
     }),
     { calories: 0, protein: 0, fat: 0, carbohydrate: 0 }
   );
+};
 
-  const hasGoals =
+/**
+ * ユーザーが目標値を設定しているかチェック
+ */
+const hasNutritionGoals = (user: User): boolean => {
+  return !!(
     user.target_calories ||
     user.target_protein ||
     user.target_fat ||
-    user.target_carbohydrate;
+    user.target_carbohydrate
+  );
+};
+
+export const NutritionSummary: React.FC<NutritionSummaryProps> = ({
+  meals,
+  user,
+  onOpenGoalModal,
+}) => {
+  const totals = calculateNutritionTotals(meals);
+  const hasGoals = hasNutritionGoals(user);
 
   return (
     <div className={styles.nutritionCard}>
@@ -110,6 +123,10 @@ interface NutritionItemProps {
   color: string;
 }
 
+/**
+ * 個別の栄養素アイテム表示
+ * 現在値、目標値、達成率を表示
+ */
 const NutritionItem: React.FC<NutritionItemProps> = ({
   label,
   current,
@@ -117,11 +134,20 @@ const NutritionItem: React.FC<NutritionItemProps> = ({
   unit,
   color,
 }) => {
+  // 安全な数値変換（ゼロ除算を避ける）
   const safeTarget = Number(target) || 1;
   const safeCurrent = Number(current) || 0;
+
+  // 達成率と差分を計算
   const percentage = (safeCurrent / safeTarget) * 100;
   const diff = safeCurrent - safeTarget;
   const isOver = diff > 0;
+
+  // プログレスバーの幅（最大100%）
+  const progressWidth = Math.min(percentage, 100);
+
+  // テキスト色の切り替え（背景色に応じて）
+  const textColorClass = percentage > 50 ? styles.progressTextDark : styles.progressTextLight;
 
   return (
     <div className={styles.nutritionItem}>
@@ -144,15 +170,11 @@ const NutritionItem: React.FC<NutritionItemProps> = ({
         <div
           className={styles.progressFill}
           style={{
-            width: `${Math.min(percentage, 100)}%`,
+            width: `${progressWidth}%`,
             backgroundColor: color,
           }}
         />
-        <span
-          className={`${styles.progressText} ${
-            percentage > 50 ? styles.progressTextDark : styles.progressTextLight
-          }`}
-        >
+        <span className={`${styles.progressText} ${textColorClass}`}>
           {percentage.toFixed(0)}%
         </span>
       </div>
