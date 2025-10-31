@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { createMeal, deleteMeal, refreshToken, scheduleTokenRefresh, fetchMe } from "./api";
+import { useNavigate, Link } from "react-router-dom";
+import { createMeal, deleteMeal, refreshToken, fetchMe } from "./api";
 import { clearAuth } from "./auth";
 import type { User } from "./types";
 import type { ViewMode } from "./utils/dateUtils";
@@ -11,15 +11,15 @@ import {
   getPreviousDate,
   getNextDate,
 } from "./utils/dateUtils";
-import { MEAL_TYPES_ORDER } from "./constants/mealTypes";
 import { useMealData } from "./hooks/useMealData";
 import { ViewModeSelector } from "./components/meals/ViewModeSelector";
 import { DateNavigator } from "./components/meals/DateNavigator";
 import { MealForm } from "./components/meals/MealForm";
-import { TotalCalories } from "./components/meals/TotalCalories";
 import { MealListView } from "./components/meals/MealListView";
 import { NutritionSummary } from "./components/NutritionSummary";
 import { NutritionGoalModal } from "./components/NutritionGoalModal";
+import styles from "./styles/app.module.css";
+import mealStyles from "./styles/meals.module.css";
 
 export default function MealsPage() {
   const navigate = useNavigate();
@@ -69,13 +69,6 @@ export default function MealsPage() {
     }
   };
 
-  // 総カロリー計算
-  const getTotalCalories = () => {
-    if (!groups) return 0;
-    const allMeals = MEAL_TYPES_ORDER.flatMap((type) => groups[type] || []);
-    return allMeals.reduce((sum, m) => sum + (m.calories || 0), 0);
-  };
-
   // ユーザー情報を取得
   useEffect(() => {
     fetchMe()
@@ -89,62 +82,72 @@ export default function MealsPage() {
   };
 
   return (
-    <div style={{ maxWidth: 720, margin: "32px auto", padding: 16 }}>
-      {/* ヘッダー */}
-      <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
-        <h2 style={{ margin: 0, flex: 1 }}>食事管理</h2>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={handleRefreshToken}>トークン更新</button>
-          <button onClick={handleLogoutClick}>ログアウト</button>
-        </div>
-      </div>
+    <div className={styles.pageContainer}>
+      <div className={mealStyles.contentWrapper}>
+        {/* ヘッダー */}
+        <header className={styles.header}>
+          <h1 className={styles.headerTitle}>食事管理</h1>
+          <div className={styles.headerActions}>
+            <button onClick={handleRefreshToken} className={`${styles.buttonSecondary} ${styles.buttonSmall}`}>
+              トークン更新
+            </button>
+            <button onClick={handleLogoutClick} className={`${styles.buttonSecondary} ${styles.buttonSmall}`}>
+              ログアウト
+            </button>
+          </div>
+        </header>
 
-      {/* ビュー切替 */}
-      <ViewModeSelector viewMode={viewMode} onViewModeChange={setViewMode} />
+        {/* ナビゲーション */}
+        <nav className={styles.nav}>
+          <Link to="/me" className={styles.navLink}>
+            マイページ
+          </Link>
+          <Link to="/meals" className={`${styles.navLink} ${styles.navLinkActive}`}>
+            食事管理
+          </Link>
+        </nav>
 
-      {/* 日付ナビゲーション */}
-      <DateNavigator
-        selectedDate={selectedDate}
-        viewMode={viewMode}
-        viewRangeLabel={getViewRangeLabel(viewMode, selectedDate)}
-        isShowingToday={isShowingToday(viewMode, selectedDate)}
-        onDateChange={setSelectedDate}
-        onPrevious={() => setSelectedDate(getPreviousDate(viewMode, selectedDate))}
-        onToday={() => setSelectedDate(getTodayString())}
-        onNext={() => setSelectedDate(getNextDate(viewMode, selectedDate))}
-      />
+        {/* ビュー切替 */}
+        <ViewModeSelector viewMode={viewMode} onViewModeChange={setViewMode} />
 
-      {/* 食事フォーム */}
-      <MealForm selectedDate={selectedDate} onSubmit={handleMealSubmit} />
-
-      {/* 栄養サマリー（日次表示のみ） */}
-      {viewMode === "day" && user && (
-        <NutritionSummary
-          meals={allMealsInRange}
-          user={user}
-          onOpenGoalModal={() => setIsGoalModalOpen(true)}
+        {/* 日付ナビゲーション */}
+        <DateNavigator
+          selectedDate={selectedDate}
+          viewMode={viewMode}
+          viewRangeLabel={getViewRangeLabel(viewMode, selectedDate)}
+          isShowingToday={isShowingToday(viewMode, selectedDate)}
+          onDateChange={setSelectedDate}
+          onPrevious={() => setSelectedDate(getPreviousDate(viewMode, selectedDate))}
+          onToday={() => setSelectedDate(getTodayString())}
+          onNext={() => setSelectedDate(getNextDate(viewMode, selectedDate))}
         />
-      )}
 
-      {/* データ表示 */}
-      {loading ? (
-        <p>読み込み中...</p>
-      ) : error ? (
-        <p style={{ color: "crimson" }}>{error}</p>
-      ) : (
-        <>
-          <TotalCalories
-            totalCalories={getTotalCalories()}
-            rangeLabel={getViewRangeLabel(viewMode, selectedDate)}
+        {/* 食事フォーム */}
+        <MealForm selectedDate={selectedDate} onSubmit={handleMealSubmit} />
+
+        {/* 栄養サマリー（日次表示のみ） */}
+        {viewMode === "day" && user && (
+          <NutritionSummary
+            meals={allMealsInRange}
+            user={user}
+            onOpenGoalModal={() => setIsGoalModalOpen(true)}
           />
+        )}
+
+        {/* データ表示 */}
+        {loading ? (
+          <p>読み込み中...</p>
+        ) : error ? (
+          <p style={{ color: "crimson" }}>{error}</p>
+        ) : (
           <MealListView
             viewMode={viewMode}
             groups={groups}
             allMealsInRange={allMealsInRange}
             onDelete={handleMealDelete}
           />
-        </>
-      )}
+        )}
+      </div>
 
       {/* 目標設定モーダル */}
       {user && (
