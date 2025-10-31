@@ -1,10 +1,9 @@
-// api.ts
 import type { LoginResponse } from "./types";
 
 const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || "http://localhost:3000";
 const API_BASE = `${API_ORIGIN}/api/v1`;
 
-// === 共通：未認証に戻す（イベント通知付き）
+// === 未認証に戻す（イベント通知付き）
 function hardSignOut() {
   try {
     localStorage.removeItem("access_token");
@@ -16,7 +15,7 @@ function hardSignOut() {
   }
 }
 
-// === 共通：保存トークンの取得と有効性チェック
+// === 保存トークンの取得と有効性チェック
 function getStoredToken(): string | null {
   return localStorage.getItem("access_token");
 }
@@ -38,6 +37,65 @@ function isAccessTokenExpired(): boolean {
 export function initAuthOnBoot() {
   if (!getStoredToken() || isAccessTokenExpired()) {
     hardSignOut();
+  }
+}
+
+// プロアクティブなトークン更新機能
+// トークンの有効期限の1分前になったら自動的に更新を試みる
+let refreshTimerId: number | undefined = undefined;
+
+export function scheduleTokenRefresh() {
+  // 既存のタイマーをクリア
+  if (refreshTimerId !== undefined) {
+    window.clearTimeout(refreshTimerId);
+    refreshTimerId = undefined;
+  }
+
+  const expSec = getStoredExp();
+  if (!expSec || !getStoredToken()) return;
+
+  const nowSec = Math.floor(Date.now() / 1000);
+  const secondsUntilExpiry = expSec - nowSec;
+
+  // 有効期限の1分前（60秒前）に更新
+  // ただし、既に1分を切っている場合は30秒前に設定
+  const refreshBeforeExpiry = secondsUntilExpiry > 120 ? 60 : 30;
+  const delayMs = Math.max(
+    0,
+    (secondsUntilExpiry - refreshBeforeExpiry) * 1000
+  );
+
+  if (delayMs > 0 && secondsUntilExpiry > refreshBeforeExpiry) {
+    const refreshTime = new Date(Date.now() + delayMs);
+    console.log(
+      `[Token Schedule] ${Math.floor(
+        delayMs / 1000
+      )}秒後にトークンを自動更新します (${refreshTime.toLocaleTimeString()})`
+    );
+
+    refreshTimerId = window.setTimeout(async () => {
+      try {
+        console.log("[Token Schedule] 自動トークン更新を実行中...");
+        await refreshToken();
+        // 成功したら次の更新をスケジュール
+        scheduleTokenRefresh();
+      } catch (err) {
+        console.error("[Token Schedule] 自動トークン更新に失敗しました:", err);
+        // 失敗してもログアウトはせず、次のAPI呼び出し時に401で処理される
+      }
+    }, delayMs);
+  } else {
+    console.log(
+      "[Token Schedule] トークンの有効期限が近すぎるため、自動更新をスケジュールしません"
+    );
+  }
+}
+
+// タイマーのクリーンアップ用
+export function cancelTokenRefresh() {
+  if (refreshTimerId !== undefined) {
+    window.clearTimeout(refreshTimerId);
+    refreshTimerId = undefined;
   }
 }
 
@@ -93,8 +151,36 @@ async function rawFetch(
 
 // === 新規: リフレッシュAPI（Cookie の refresh_token を使用） ===
 export async function refreshToken(): Promise<LoginResponse> {
+  console.log(
+    "[Token Refresh] リフレッシュトークンを使用してアクセストークンを更新します..."
+  );
   const res = await rawFetch("/auth_token/refresh", { method: "POST" });
-  return res as LoginResponse; // { token, expires, user }
+  const loginResponse = res as LoginResponse; // { token, expires, user }
+
+  // トークン更新後、localStorageを更新してイベントを発火
+  localStorage.setItem("access_token", loginResponse.token);
+  localStorage.setItem(
+    "access_token_expires",
+    String(loginResponse.expires ?? "")
+  );
+  localStorage.setItem(
+    "current_user",
+    JSON.stringify(loginResponse.user ?? null)
+  );
+
+  const expiresNum =
+    typeof loginResponse.expires === "number"
+      ? loginResponse.expires
+      : parseInt(String(loginResponse.expires), 10);
+  console.log(
+    "[Token Refresh] トークン更新成功。新しい有効期限:",
+    new Date(expiresNum * 1000).toLocaleString()
+  );
+
+  // アプリ全体に更新を通知
+  window.dispatchEvent(new Event("authorized"));
+
+  return loginResponse;
 }
 
 // === 401時に自動リフレッシュ → 1回だけ再試行するラッパ ===
@@ -114,11 +200,7 @@ export async function apiFetch<T>(
     if (e instanceof ApiError && e.status === 401 && !_retry) {
       try {
         const r = await refreshToken();
-        // 新アクセストークンを保存
-        localStorage.setItem("access_token", r.token);
-        // expires は秒数で保存している前提。API が ms なら適宜調整を ★
-        localStorage.setItem("access_token_expires", String(r.expires ?? ""));
-        localStorage.setItem("current_user", JSON.stringify(r.user ?? null));
+        // refreshToken() 内で既にlocalStorageとイベント発火済み
 
         // 新トークンで 1 回だけ再試行
         return (await rawFetch(path, {
@@ -127,7 +209,7 @@ export async function apiFetch<T>(
           _retry: true, // 無限ループ抑止（念のため）
         })) as T;
       } catch (refreshErr) {
-        // リフレッシュ失敗：認証状態をクリアして通知し、元の 401 を投げる ★
+        // リフレッシュ失敗：認証状態をクリアして通知し、元の 401 を投げる
         hardSignOut();
         throw e;
       }
@@ -239,7 +321,9 @@ export function getMealSummaryByDate(date: string) {
 
 export function getMealSummaryByRange(from: string, to: string) {
   return apiFetch<MealGroups>(
-    `/meals/summary?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`
+    `/meals/summary?from=${encodeURIComponent(from)}&to=${encodeURIComponent(
+      to
+    )}`
   );
 }
 
