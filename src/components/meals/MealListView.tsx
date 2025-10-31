@@ -8,6 +8,21 @@ import { MEAL_TYPE_LABELS, MEAL_TYPES_ORDER, MEAL_TYPES } from "../../constants/
 import type { ViewMode } from "../../utils/dateUtils";
 import styles from "../../styles/meals.module.css";
 
+// タグごとの色定義
+const TAG_COLORS: Record<string, string> = {
+  外食: "#ef4444",      // 赤
+  自炊: "#22c55e",      // 緑
+  和食: "#f59e0b",      // オレンジ
+  洋食: "#3b82f6",      // 青
+  中華: "#dc2626",      // 濃い赤
+  韓国料理: "#ec4899",  // ピンク
+  イタリアン: "#10b981", // エメラルド
+};
+
+const DEFAULT_TAG_COLOR = "#6b7280"; // デフォルトはグレー
+
+const AVAILABLE_TAGS = ["外食", "自炊", "和食", "洋食", "中華", "韓国料理", "イタリアン"];
+
 interface MealListViewProps {
   viewMode: ViewMode;
   groups: {
@@ -56,13 +71,18 @@ const DayView: React.FC<{
 }> = ({ groups, onDelete, onUpdate }) => {
   if (!groups) return null;
 
+  // 各食事タイプの小計カロリーを計算
+  const calculateSubtotal = (meals: Meal[]) => {
+    return meals.reduce((sum, meal) => sum + (meal.calories || 0), 0);
+  };
+
   return (
     <>
       {MEAL_TYPES_ORDER.map((type) => {
         const items = groups[type] || [];
         if (items.length === 0) return null;
 
-        const subtotalCalories = items.reduce((sum, m) => sum + (m.calories || 0), 0);
+        const subtotalCalories = calculateSubtotal(items);
 
         return (
           <section key={type} className={styles.mealSection}>
@@ -76,8 +96,14 @@ const DayView: React.FC<{
             </div>
 
             <ul className={styles.mealList}>
-              {items.map((m) => (
-                <MealItem key={m.id} meal={m} onDelete={onDelete} onUpdate={onUpdate} showDate={false} />
+              {items.map((meal) => (
+                <MealItem
+                  key={meal.id}
+                  meal={meal}
+                  onDelete={onDelete}
+                  onUpdate={onUpdate}
+                  showDate={false}
+                />
               ))}
             </ul>
           </section>
@@ -97,22 +123,43 @@ const WeekMonthView: React.FC<{
   onDelete: (id: number) => Promise<void>;
   onUpdate: (id: number, data: Partial<Meal>) => Promise<void>;
 }> = ({ viewMode, allMealsInRange, onDelete, onUpdate }) => {
+  const title = viewMode === "week" ? "週間食事リスト" : "月間食事リスト";
+  const hasNoMeals = allMealsInRange.length === 0;
+
   return (
     <div className={styles.weekMonthContainer}>
-      <h3 className={styles.weekMonthTitle}>
-        {viewMode === "week" ? "週間" : "月間"}食事リスト
-      </h3>
-      {allMealsInRange.length > 0 ? (
+      <h3 className={styles.weekMonthTitle}>{title}</h3>
+      {hasNoMeals ? (
+        <p className={styles.emptyMessage}>この期間の記録はありません</p>
+      ) : (
         <ul className={styles.mealList}>
-          {allMealsInRange.map((m) => (
-            <MealItem key={m.id} meal={m} onDelete={onDelete} onUpdate={onUpdate} showDate={true} />
+          {allMealsInRange.map((meal) => (
+            <MealItem
+              key={meal.id}
+              meal={meal}
+              onDelete={onDelete}
+              onUpdate={onUpdate}
+              showDate={true}
+            />
           ))}
         </ul>
-      ) : (
-        <p className={styles.emptyMessage}>この期間の記録はありません</p>
       )}
     </div>
   );
+};
+
+/**
+ * タグの色を取得するヘルパー関数
+ */
+const getTagColor = (tag: string): string => {
+  return TAG_COLORS[tag] || DEFAULT_TAG_COLOR;
+};
+
+/**
+ * 栄養素の値をフォーマット（小数点1桁）
+ */
+const formatNutrient = (value: number | null | undefined): string => {
+  return value ? Number(value).toFixed(1) : "-";
 };
 
 /**
@@ -128,20 +175,8 @@ const MealItem: React.FC<{
 }> = ({ meal, onDelete, onUpdate, showDate }) => {
   const [isEditing, setIsEditing] = useState(false);
 
-  // タグごとの色定義
-  const tagColors: Record<string, string> = {
-    外食: "#ef4444",      // 赤
-    自炊: "#22c55e",      // 緑
-    和食: "#f59e0b",      // オレンジ
-    洋食: "#3b82f6",      // 青
-    中華: "#dc2626",      // 濃い赤
-    韓国料理: "#ec4899",  // ピンク
-    イタリアン: "#10b981", // エメラルド
-  };
-
-  const getTagColor = (tag: string) => {
-    return tagColors[tag] || "#6b7280"; // デフォルトはグレー
-  };
+  // 栄養素が入力されているかチェック
+  const hasNutritionInfo = meal.protein || meal.fat || meal.carbohydrate;
   return (
     <li className={styles.mealItem}>
       <div className={styles.mealItemContent}>
@@ -166,9 +201,9 @@ const MealItem: React.FC<{
             <div>
               グラム数: {meal.grams ?? "-"} g
             </div>
-            {(meal.protein || meal.fat || meal.carbohydrate) && (
+            {hasNutritionInfo && (
               <div className={styles.mealItemNutrition}>
-                P: {meal.protein ? Number(meal.protein).toFixed(1) : "-"}g / F: {meal.fat ? Number(meal.fat).toFixed(1) : "-"}g / C: {meal.carbohydrate ? Number(meal.carbohydrate).toFixed(1) : "-"}g
+                P: {formatNutrient(meal.protein)}g / F: {formatNutrient(meal.fat)}g / C: {formatNutrient(meal.carbohydrate)}g
               </div>
             )}
           </div>
@@ -212,6 +247,13 @@ const MealItem: React.FC<{
 };
 
 /**
+ * 数値をフォーム用の文字列に変換するヘルパー関数
+ */
+const toFormString = (value: number | null | undefined): string => {
+  return value !== null && value !== undefined ? String(value) : "";
+};
+
+/**
  * 食事編集モーダル
  */
 const EditMealModal: React.FC<{
@@ -219,18 +261,19 @@ const EditMealModal: React.FC<{
   onClose: () => void;
   onUpdate: (id: number, data: Partial<Meal>) => Promise<void>;
 }> = ({ meal, onClose, onUpdate }) => {
+  // フォーム入力状態
   const [content, setContent] = useState(meal.content);
   const [mealType, setMealType] = useState(meal.meal_type);
-  const [calories, setCalories] = useState(String(meal.calories ?? ""));
-  const [grams, setGrams] = useState(String(meal.grams ?? ""));
-  const [protein, setProtein] = useState(String(meal.protein ?? ""));
-  const [fat, setFat] = useState(String(meal.fat ?? ""));
-  const [carbohydrate, setCarbohydrate] = useState(String(meal.carbohydrate ?? ""));
+  const [calories, setCalories] = useState(toFormString(meal.calories));
+  const [grams, setGrams] = useState(toFormString(meal.grams));
+  const [protein, setProtein] = useState(toFormString(meal.protein));
+  const [fat, setFat] = useState(toFormString(meal.fat));
+  const [carbohydrate, setCarbohydrate] = useState(toFormString(meal.carbohydrate));
   const [tags, setTags] = useState<string[]>(meal.tags || []);
+
+  // UI状態
   const [showTagSelector, setShowTagSelector] = useState(false);
   const tagSelectorRef = useRef<HTMLDivElement>(null);
-
-  const availableTags = ["外食", "自炊", "和食", "洋食", "中華", "韓国料理", "イタリアン"];
 
   // モーダル表示時に背景のスクロールを防ぐ
   useEffect(() => {
@@ -257,15 +300,18 @@ const EditMealModal: React.FC<{
     };
   }, [showTagSelector]);
 
+  // タグの選択・解除を切り替え
   const handleTagToggle = (tag: string) => {
     setTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
   };
 
+  // フォーム送信処理
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onUpdate(meal.id, {
+
+    const updatedData: Partial<Meal> = {
       content,
       meal_type: mealType,
       calories: calories ? Number(calories) : undefined,
@@ -274,7 +320,9 @@ const EditMealModal: React.FC<{
       fat: fat ? Number(fat) : undefined,
       carbohydrate: carbohydrate ? Number(carbohydrate) : undefined,
       tags,
-    });
+    };
+
+    await onUpdate(meal.id, updatedData);
     onClose();
   };
 
@@ -375,7 +423,7 @@ const EditMealModal: React.FC<{
               </button>
               {showTagSelector && (
                 <div className={styles.tagDropdown}>
-                  {availableTags.map((tag) => (
+                  {AVAILABLE_TAGS.map((tag) => (
                     <label key={tag} className={styles.tagCheckboxLabel}>
                       <input
                         type="checkbox"
