@@ -48,8 +48,12 @@ export default function SignUp({
       window.dispatchEvent(new Event("authorized"));
 
       navigate("/me", { replace: true });
-    } catch (err: any) {
-      setErrMsg(err?.message ?? "新規登録に失敗しました。");
+    } catch (err: unknown) {
+      const message =
+        err && typeof err === "object" && "message" in err && typeof err.message === "string"
+          ? err.message
+          : "新規登録に失敗しました。";
+      setErrMsg(message);
     } finally {
       setLoading(false);
     }
