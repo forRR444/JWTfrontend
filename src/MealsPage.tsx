@@ -122,9 +122,6 @@ export default function MealsPage() {
           onNext={() => setSelectedDate(getNextDate(viewMode, selectedDate))}
         />
 
-        {/* 食事フォーム */}
-        <MealForm selectedDate={selectedDate} onSubmit={handleMealSubmit} />
-
         {/* 栄養サマリー（日次表示のみ） */}
         {viewMode === "day" && user && (
           <NutritionSummary
@@ -133,6 +130,9 @@ export default function MealsPage() {
             onOpenGoalModal={() => setIsGoalModalOpen(true)}
           />
         )}
+
+        {/* 食事フォーム */}
+        <MealForm selectedDate={selectedDate} onSubmit={handleMealSubmit} />
 
         {/* データ表示 */}
         {loading ? (
