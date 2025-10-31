@@ -41,13 +41,14 @@ describe('MealForm', () => {
     const user = userEvent.setup()
     render(<MealForm selectedDate={selectedDate} onSubmit={mockOnSubmit} />)
 
+    // 食事内容のinput要素にrequired属性があることを確認
+    const contentInput = screen.getByLabelText('食事内容') as HTMLInputElement
+    expect(contentInput).toHaveAttribute('required')
+
     const submitButton = screen.getByText('追加')
     await user.click(submitButton)
 
-    await waitFor(() => {
-      expect(screen.getByText('食事内容は必須です')).toBeInTheDocument()
-    })
-
+    // フォームが送信されないことを確認
     expect(mockOnSubmit).not.toHaveBeenCalled()
   })
 
