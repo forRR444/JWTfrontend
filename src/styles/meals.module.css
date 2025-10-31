@@ -21,7 +21,7 @@
 }
 
 .formTitle {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 600;
   color: #1a1a1a;
   margin: 0 0 12px 0;
@@ -42,10 +42,11 @@
   grid-template-columns: 1fr 1fr;
 }
 
+.formRow3Col {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
 @media (min-width: 768px) {
-  .formRow3Col {
-    grid-template-columns: 1fr 1fr 1fr;
-  }
   .formRow4Col {
     grid-template-columns: 1fr 1fr 1fr 1fr;
   }
@@ -143,6 +144,27 @@
 
 .inputFlex:focus {
   border-color: #4a90e2;
+}
+
+/* クリアボタン（×） */
+.clearButton {
+  padding: 6px 10px;
+  font-size: 18px;
+  font-weight: 400;
+  color: #999;
+  background: #ffffff;
+  border: 1px solid #d0d0d0;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  line-height: 1;
+}
+
+.clearButton:hover {
+  color: #d32f2f;
+  border-color: #d32f2f;
+  background: #ffebee;
 }
 
 .searchButton {
@@ -571,7 +593,7 @@
 }
 
 .mealSectionTitle {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 600;
   color: #1a1a1a;
   margin: 0;
@@ -579,10 +601,10 @@
 
 .mealSubtotal {
   background: #e8f4ff;
-  padding: 4px 12px;
+  padding: 5px 14px;
   border-radius: 3px;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 16px;
+  font-weight: 600;
   color: #4a90e2;
 }
 
@@ -633,9 +655,16 @@
 }
 
 .mealItemName {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   color: #1a1a1a;
+  margin-bottom: 6px;
+}
+
+.mealItemCalories {
+  font-size: 17px;
+  font-weight: 700;
+  color: #4a90e2;
   margin-bottom: 6px;
 }
 
@@ -704,7 +733,7 @@
 }
 
 .weekMonthTitle {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 600;
   color: #1a1a1a;
   margin: 0 0 16px 0;
@@ -724,11 +753,12 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  overflow-y: auto;
 }
 
 .modalContent {
