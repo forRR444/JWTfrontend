@@ -121,6 +121,20 @@ const MealItem: React.FC<{
   onDelete: (id: number) => Promise<void>;
   showDate: boolean;
 }> = ({ meal, onDelete, showDate }) => {
+  // タグごとの色定義
+  const tagColors: Record<string, string> = {
+    外食: "#ef4444",      // 赤
+    自炊: "#22c55e",      // 緑
+    和食: "#f59e0b",      // オレンジ
+    洋食: "#3b82f6",      // 青
+    中華: "#dc2626",      // 濃い赤
+    韓国料理: "#ec4899",  // ピンク
+    イタリアン: "#10b981", // エメラルド
+  };
+
+  const getTagColor = (tag: string) => {
+    return tagColors[tag] || "#6b7280"; // デフォルトはグレー
+  };
   return (
     <li className={styles.mealItem}>
       <div className={styles.mealItemContent}>
@@ -150,7 +164,15 @@ const MealItem: React.FC<{
           </div>
           {meal.tags && meal.tags.length > 0 && (
             <div className={styles.mealItemTags}>
-              タグ: {meal.tags.join(", ")}
+              {meal.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className={styles.mealTagChip}
+                  style={{ backgroundColor: getTagColor(tag) }}
+                >
+                  {tag}
+                </span>
+              ))}
             </div>
           )}
           {!showDate && (
