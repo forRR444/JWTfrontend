@@ -1,0 +1,249 @@
+/*
+ * 認証画面用スタイル
+ * シンプルで実務向き / 落ち着いた中立トーン / 読みやすさ優先
+ */
+
+/* レイアウト */
+.container {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* 大画面用：縦並びレイアウト（最大幅を広げる） */
+@media (min-width: 1024px) {
+  .container {
+    max-width: 640px;
+    padding: 40px;
+  }
+}
+
+/* ヘッダーセクション */
+.header {
+  text-align: center;
+  margin-bottom: 40px;
+  position: relative;
+}
+
+.logo {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+  letter-spacing: 0.02em;
+}
+
+.tagline {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  font-weight: 400;
+}
+
+/* テストログインボタン */
+.testLoginButton {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  background: #ffffff;
+  border: 1px solid #d0d0d0;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.testLoginButton:hover:not(:disabled) {
+  color: #4a90e2;
+  border-color: #4a90e2;
+  background: #f8f9fa;
+}
+
+.testLoginButton:active:not(:disabled) {
+  background: #e8e9ea;
+}
+
+.testLoginButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* フォームカード */
+.card {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 32px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.cardTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 24px 0;
+}
+
+/* フォーム要素 */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #4a4a4a;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #1a1a1a;
+  background: #ffffff;
+  border: 1px solid #d0d0d0;
+  border-radius: 3px;
+  outline: none;
+  transition: border-color 0.15s ease;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.input:focus {
+  border-color: #4a90e2;
+}
+
+.input::placeholder {
+  color: #999;
+}
+
+.input:disabled {
+  background: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
+}
+
+/* ボタン */
+.button {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+  background: #4a90e2;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  font-family: inherit;
+}
+
+.button:hover:not(:disabled) {
+  background: #3a7bc8;
+}
+
+.button:active:not(:disabled) {
+  background: #2e6cb0;
+}
+
+.button:disabled {
+  background: #b0b0b0;
+  cursor: not-allowed;
+}
+
+/* エラーメッセージ */
+.error {
+  font-size: 13px;
+  color: #d32f2f;
+  margin: -8px 0 0 0;
+  padding: 8px 12px;
+  background: #ffebee;
+  border-radius: 3px;
+  border-left: 3px solid #d32f2f;
+}
+
+/* フッターリンク */
+.footer {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 13px;
+  color: #666;
+}
+
+.link {
+  color: #4a90e2;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+/* ヒントテキスト */
+.hint {
+  font-size: 12px;
+  color: #888;
+  margin-top: 4px;
+}
+
+/* アプリ説明セクション */
+.introSection {
+  background: #f8f9fa;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  padding: 24px;
+  margin-bottom: 32px;
+}
+
+.introTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 16px 0;
+}
+
+.introText {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #4a4a4a;
+  margin: 0 0 12px 0;
+}
+
+.introText:last-child {
+  margin-bottom: 0;
+}
+
+.introText strong {
+  font-weight: 600;
+  color: #2a2a2a;
+}
+
+.featureList {
+  font-size: 14px;
+  line-height: 1.8;
+  color: #4a4a4a;
+  margin: 12px 0 0 0;
+  padding-left: 20px;
+}
+
+.featureList li {
+  margin-bottom: 4px;
+}
