@@ -295,7 +295,7 @@
   font-size: 13px;
   font-weight: 500;
   color: #ffffff;
-  background: #28a745;
+  background: #4a90e2;
   border: none;
   border-radius: 3px;
   cursor: pointer;
@@ -304,7 +304,7 @@
 }
 
 .nutritionButton:hover {
-  background: #218838;
+  background: #3a7bc8;
 }
 
 .nutritionList {
@@ -340,11 +340,11 @@
 }
 
 .nutritionDiffOver {
-  color: #dc3545;
+  color: #4a90e2;
 }
 
 .nutritionDiffUnder {
-  color: #28a745;
+  color: #888;
 }
 
 .progressBar {
@@ -383,4 +383,290 @@
   padding: 24px 0;
   color: #666;
   font-size: 14px;
+}
+
+/* 食事リスト */
+.mealSection {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.mealSectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.mealSectionTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.mealSubtotal {
+  background: #e8f4ff;
+  padding: 4px 12px;
+  border-radius: 3px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #4a90e2;
+}
+
+.mealList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.mealItem {
+  background: #fafbfc;
+  border: 1px solid #e8e9ea;
+  border-radius: 3px;
+  padding: 12px;
+}
+
+.mealItemContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.mealItemInfo {
+  flex: 1;
+}
+
+.mealItemDate {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.mealItemDateText {
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+}
+
+.mealItemTypeBadge {
+  background: #e8f4ff;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 12px;
+  color: #4a90e2;
+}
+
+.mealItemName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 6px;
+}
+
+.mealItemDetails {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.5;
+}
+
+.mealItemNutrition {
+  margin-top: 4px;
+  color: #888;
+}
+
+.mealItemTags {
+  font-size: 12px;
+  color: #888;
+  margin-top: 6px;
+}
+
+.mealItemTimestamp {
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
+}
+
+.mealDeleteButton {
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+  background: #ffffff;
+  border: 1px solid #d0d0d0;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  margin-left: 12px;
+}
+
+.mealDeleteButton:hover {
+  color: #d32f2f;
+  border-color: #d32f2f;
+  background: #ffebee;
+}
+
+/* 週・月ビュー用コンテナ */
+.weekMonthContainer {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 16px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.weekMonthTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 16px 0;
+}
+
+.emptyMessage {
+  color: #999;
+  text-align: center;
+  padding: 24px;
+  font-size: 14px;
+}
+
+/* モーダル */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 4px;
+  max-width: 480px;
+  width: 90%;
+  max-height: 90vh;
+  overflow: auto;
+  border: 1px solid #e0e0e0;
+}
+
+.modalTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 20px 0;
+}
+
+.modalForm {
+  display: grid;
+  gap: 16px;
+}
+
+.modalFormGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modalLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: #4a4a4a;
+}
+
+.modalInput {
+  padding: 9px 11px;
+  font-size: 14px;
+  color: #1a1a1a;
+  background: #ffffff;
+  border: 1px solid #d0d0d0;
+  border-radius: 3px;
+  outline: none;
+  transition: border-color 0.15s ease;
+  font-family: inherit;
+  width: 100%;
+}
+
+.modalInput:focus {
+  border-color: #4a90e2;
+}
+
+.modalButtonGroup {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.modalButtonCancel {
+  flex: 1;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  background: #ffffff;
+  border: 1px solid #d0d0d0;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.modalButtonCancel:hover:not(:disabled) {
+  color: #4a90e2;
+  border-color: #4a90e2;
+  background: #f8f9fa;
+}
+
+.modalButtonCancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.modalButtonSubmit {
+  flex: 1;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+  background: #4a90e2;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  font-family: inherit;
+}
+
+.modalButtonSubmit:hover:not(:disabled) {
+  background: #3a7bc8;
+}
+
+.modalButtonSubmit:disabled {
+  background: #b0b0b0;
+  cursor: not-allowed;
+}
+
+.modalHints {
+  margin-top: 16px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 3px;
+  font-size: 13px;
+  color: #666;
+  line-height: 1.6;
+}
+
+.modalHint {
+  margin: 4px 0;
 }
