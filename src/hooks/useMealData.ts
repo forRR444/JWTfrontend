@@ -15,7 +15,8 @@ export const useMealData = (viewMode: ViewMode, selectedDate: string) => {
       if (mode === "day") {
         const res = await getMealSummaryByDate(dateStr);
         setGroups(res.groups);
-        setAllMealsInRange([]);
+        const allMeals = Object.values(res.groups).flat();
+        setAllMealsInRange(allMeals);
       } else if (mode === "week") {
         const range = getWeekRange(dateStr);
         const res = await getMealSummaryByRange(range.from, range.to);

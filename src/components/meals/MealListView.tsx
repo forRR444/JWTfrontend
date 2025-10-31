@@ -203,11 +203,18 @@ const MealItem: React.FC<{
           <div style={{ marginTop: showDate ? 4 : 0 }}>
             <strong>{meal.content}</strong>
           </div>
-          <small>
-            kcal: {meal.calories ?? "-"} / g: {meal.grams ?? "-"}
-          </small>
+          <div style={{ fontSize: "0.9em", color: "#555" }}>
+            <div>
+              カロリー: {meal.calories ?? "-"} kcal / 重量: {meal.grams ?? "-"} g
+            </div>
+            {(meal.protein || meal.fat || meal.carbohydrate) && (
+              <div style={{ marginTop: 2 }}>
+                P: {meal.protein ? Number(meal.protein).toFixed(1) : "-"}g / F: {meal.fat ? Number(meal.fat).toFixed(1) : "-"}g / C: {meal.carbohydrate ? Number(meal.carbohydrate).toFixed(1) : "-"}g
+              </div>
+            )}
+          </div>
           {meal.tags && meal.tags.length > 0 && (
-            <div style={{ fontSize: showDate ? "0.85em" : "1em" }}>
+            <div style={{ fontSize: showDate ? "0.85em" : "1em", marginTop: 4 }}>
               タグ: {meal.tags.join(", ")}
             </div>
           )}
