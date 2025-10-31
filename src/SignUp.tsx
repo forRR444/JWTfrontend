@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { register } from "./api";
 import { setAuth } from "./auth";
 import type { LoginResponse } from "./types";
+import { AppHeader } from "./components/AppHeader";
 import styles from "./styles/auth.module.css";
 
 export default function SignUp({
@@ -43,10 +44,7 @@ export default function SignUp({
 
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
-        <h1 className={styles.logo}>NutriTrack</h1>
-        <p className={styles.tagline}>シンプルな栄養管理</p>
-      </header>
+      <AppHeader />
 
       <div className={styles.contentWrapper}>
         {/* アプリ紹介セクション */}

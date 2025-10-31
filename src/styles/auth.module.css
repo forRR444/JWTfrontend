@@ -24,7 +24,7 @@
 
 /* ヘッダーセクション */
 .header {
-  text-align: center;
+  text-align: left;
   margin-bottom: 40px;
   position: relative;
 }
@@ -46,11 +46,8 @@
 
 /* テストログインボタン */
 .testLoginButton {
-  position: absolute;
-  top: 0;
-  right: 0;
   padding: 6px 12px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: #666;
   background: #ffffff;
