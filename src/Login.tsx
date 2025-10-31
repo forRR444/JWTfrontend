@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { login, scheduleTokenRefresh } from "./api";
 import type { LoginResponse } from "./types";
 import { Link } from "react-router-dom";
+import { AppHeader } from "./components/AppHeader";
 import styles from "./styles/auth.module.css";
 
 export default function Login({
@@ -48,18 +49,18 @@ export default function Login({
 
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
-        <h1 className={styles.logo}>NutriTrack</h1>
-        <p className={styles.tagline}>シンプルな栄養管理</p>
-        <button
-          type="button"
-          onClick={handleTestLogin}
-          disabled={loading}
-          className={styles.testLoginButton}
-        >
-          テストログイン
-        </button>
-      </header>
+      <AppHeader
+        actions={
+          <button
+            type="button"
+            onClick={handleTestLogin}
+            disabled={loading}
+            className={styles.testLoginButton}
+          >
+            テストログイン
+          </button>
+        }
+      />
 
       <div className={styles.contentWrapper}>
         {/* アプリ紹介セクション */}
