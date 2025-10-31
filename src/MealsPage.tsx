@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { createMeal, deleteMeal, updateMeal, refreshToken, fetchMe } from "./api";
 import { clearAuth } from "./auth";
 import type { User } from "./types";
@@ -19,6 +19,8 @@ import { MealListView } from "./components/meals/MealListView";
 import { NutritionSummary } from "./components/NutritionSummary";
 import { NutritionGoalModal } from "./components/NutritionGoalModal";
 import { AppHeader } from "./components/AppHeader";
+import { HeaderActions } from "./components/HeaderActions";
+import { AppNavigation } from "./components/AppNavigation";
 import styles from "./styles/app.module.css";
 import mealStyles from "./styles/meals.module.css";
 
@@ -102,26 +104,15 @@ export default function MealsPage() {
         {/* ヘッダー */}
         <AppHeader
           actions={
-            <>
-              <button onClick={handleRefreshToken} className={`${styles.buttonSecondary} ${styles.buttonSmall}`}>
-                トークン更新
-              </button>
-              <button onClick={handleLogoutClick} className={`${styles.buttonSecondary} ${styles.buttonSmall}`}>
-                ログアウト
-              </button>
-            </>
+            <HeaderActions
+              onRefreshToken={handleRefreshToken}
+              onLogout={handleLogoutClick}
+            />
           }
         />
 
         {/* ナビゲーション */}
-        <nav className={styles.nav}>
-          <Link to="/me" className={styles.navLink}>
-            マイページ
-          </Link>
-          <Link to="/dashboard" className={`${styles.navLink} ${styles.navLinkActive}`}>
-            食事管理
-          </Link>
-        </nav>
+        <AppNavigation currentPage="dashboard" />
 
         {/* ビュー切替 */}
         <ViewModeSelector viewMode={viewMode} onViewModeChange={setViewMode} />
