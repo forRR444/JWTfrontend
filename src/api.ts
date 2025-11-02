@@ -1,6 +1,7 @@
 import type { LoginResponse, Food, User } from "./types";
 
-const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || "http://localhost:3000";
+// VITE_API_ORIGINが空の場合は同じオリジン（Viteプロキシ経由）を使用
+const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || "";
 const API_BASE = `${API_ORIGIN}/api/v1`;
 
 // 強制ログアウト処理
