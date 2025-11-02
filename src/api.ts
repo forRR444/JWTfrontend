@@ -46,7 +46,7 @@ export function initAuthOnBoot() {
 
 // 自動リフレッシュのスケジュール管理
 let refreshTimerId: number | undefined = undefined;
-// 有効期限の60/30秒前に自動リフレッシュを予約
+// 有効期限の30秒前に自動リフレッシュを予約
 export function scheduleTokenRefresh() {
   if (refreshTimerId !== undefined) {
     window.clearTimeout(refreshTimerId);
@@ -58,7 +58,7 @@ export function scheduleTokenRefresh() {
 
   const nowSec = Math.floor(Date.now() / 1000);
   const secondsUntilExpiry = expSec - nowSec;
-  const refreshBeforeExpiry = secondsUntilExpiry > 120 ? 60 : 30;
+  const refreshBeforeExpiry = 30;  // 常に30秒前に更新
   const delayMs = Math.max(
     0,
     (secondsUntilExpiry - refreshBeforeExpiry) * 1000
