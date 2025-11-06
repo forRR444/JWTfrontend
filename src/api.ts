@@ -10,6 +10,7 @@ function hardSignOut() {
     localStorage.removeItem("access_token");
     localStorage.removeItem("access_token_expires");
     localStorage.removeItem("current_user");
+    localStorage.removeItem("refresh_token"); // リフレッシュトークンも削除
   } finally {
     alert("認証が切れました。ログイン画面に戻ります。");
     window.dispatchEvent(new Event("unauthorized"));
@@ -146,13 +147,36 @@ async function rawFetch(
   return data;
 }
 
-// リフレッシュAPI（Cookieのrefresh_tokenで新トークン発行）
+// リフレッシュAPI（localStorageのrefresh_tokenで新トークン発行）
 export async function refreshToken(): Promise<LoginResponse> {
   console.log(
     "[Token Refresh] リフレッシュトークンを使用してアクセストークンを更新します..."
   );
-  const res = await rawFetch("/auth_token/refresh", { method: "POST" });
-  const loginResponse = res as LoginResponse; // { token, expires, user }
+
+  // localStorageからリフレッシュトークンを取得
+  const storedRefreshToken = localStorage.getItem("refresh_token");
+  if (!storedRefreshToken) {
+    throw new Error("リフレッシュトークンが見つかりません");
+  }
+
+  // Authorizationヘッダーにリフレッシュトークンを含める
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "X-Requested-With": "XMLHttpRequest",
+    "Authorization": `Bearer ${storedRefreshToken}`,
+  };
+
+  const response = await fetch(`${API_BASE}/auth_token/refresh`, {
+    method: "POST",
+    headers,
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    throw new ApiError(`HTTP ${response.status}`, response.status);
+  }
+
+  const loginResponse = await response.json() as LoginResponse; // { token, expires, refresh_token, user }
 
   // 新トークンを保存・通知
   localStorage.setItem("access_token", loginResponse.token);
@@ -164,6 +188,11 @@ export async function refreshToken(): Promise<LoginResponse> {
     "current_user",
     JSON.stringify(loginResponse.user ?? null)
   );
+
+  // リフレッシュトークンも更新して保存
+  if (loginResponse.refresh_token) {
+    localStorage.setItem("refresh_token", loginResponse.refresh_token);
+  }
 
   const expiresNum =
     typeof loginResponse.expires === "number"
@@ -209,11 +238,18 @@ export async function apiFetch<T>(
 }
 
 // 認証系エンドポイント
-export function login(params: { email: string; password: string }) {
-  return apiFetch<LoginResponse>("/auth_token", {
+export async function login(params: { email: string; password: string }) {
+  const response = await apiFetch<LoginResponse>("/auth_token", {
     method: "POST",
     body: { auth: params },
   });
+
+  // リフレッシュトークンをlocalStorageに保存
+  if (response.refresh_token) {
+    localStorage.setItem("refresh_token", response.refresh_token);
+  }
+
+  return response;
 }
 
 // ローカルサインアウト
@@ -221,16 +257,23 @@ export function signOutLocally() {
   hardSignOut();
 }
 // 新規登録
-export function register(params: {
+export async function register(params: {
   name: string;
   email: string;
   password: string;
   password_confirmation: string;
 }) {
-  return apiFetch<LoginResponse>("/users", {
+  const response = await apiFetch<LoginResponse>("/users", {
     method: "POST",
     body: { user: params },
   });
+
+  // リフレッシュトークンをlocalStorageに保存
+  if (response.refresh_token) {
+    localStorage.setItem("refresh_token", response.refresh_token);
+  }
+
+  return response;
 }
 
 // Meals型・API
