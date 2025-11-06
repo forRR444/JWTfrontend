@@ -42,16 +42,27 @@
 }
 
 .formRow3Col {
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr;
 }
 
 .formRow4Col {
-  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
 }
 
 /* モバイルでは種類セレクトを半分の幅に */
 .formRowHalf {
   grid-template-columns: 1fr 1fr;
+}
+
+/* タブレット・PC用レイアウト */
+@media (min-width: 768px) {
+  .formRow3Col {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .formRow4Col {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+  }
 }
 
 /* フォームグループ */
@@ -343,6 +354,7 @@
   margin-bottom: 20px;
   padding-bottom: 12px;
   border-bottom: 1px solid #e0e0e0;
+  flex-wrap: wrap;
 }
 
 .viewModeButton {
@@ -356,6 +368,14 @@
   cursor: pointer;
   transition: all 0.15s ease;
   font-family: inherit;
+  flex: 1;
+  min-width: 80px;
+}
+
+@media (min-width: 768px) {
+  .viewModeButton {
+    flex: initial;
+  }
 }
 
 .viewModeButton:hover {
@@ -380,11 +400,13 @@
   padding: 12px 16px;
   background: #f8f9fa;
   border-radius: 4px;
+  flex-wrap: wrap;
 }
 
 .dateNavButtons {
   display: flex;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .dateNavButton {
@@ -760,13 +782,19 @@
 
 .modalContent {
   background: #ffffff;
-  padding: 24px;
+  padding: 16px;
   border-radius: 4px;
   max-width: 480px;
   width: 90%;
   max-height: 90vh;
   overflow: auto;
   border: 1px solid #e0e0e0;
+}
+
+@media (min-width: 768px) {
+  .modalContent {
+    padding: 24px;
+  }
 }
 
 .modalTitle {
