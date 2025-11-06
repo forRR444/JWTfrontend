@@ -368,14 +368,6 @@
   cursor: pointer;
   transition: all 0.15s ease;
   font-family: inherit;
-  flex: 1;
-  min-width: 80px;
-}
-
-@media (min-width: 768px) {
-  .viewModeButton {
-    flex: initial;
-  }
 }
 
 .viewModeButton:hover {
