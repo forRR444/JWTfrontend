@@ -45,10 +45,8 @@
   grid-template-columns: 1fr 1fr 1fr;
 }
 
-@media (min-width: 768px) {
-  .formRow4Col {
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-  }
+.formRow4Col {
+  grid-template-columns: 1fr 1fr 1fr 1fr;
 }
 
 /* モバイルでは種類セレクトを半分の幅に */
