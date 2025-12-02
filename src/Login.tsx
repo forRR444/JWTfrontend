@@ -43,7 +43,7 @@ export default function Login({
       onSuccess?.(res);
       // Cookieの保存完了を待ってから遷移（ブラウザのCookie保存は非同期）
       await new Promise((resolve) => setTimeout(resolve, 50));
-      navigate("/me", { replace: true });
+      navigate("/dashboard", { replace: true });
     } catch (err: unknown) {
       // エラーメッセージを取得（APIエラーからメッセージを抽出）
       let errorMessage = "ログインに失敗しました。";
