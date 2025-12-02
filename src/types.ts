@@ -20,22 +20,12 @@ export interface User {
  * ログイン・サインアップAPIのレスポンス形式
  * - トークンと有効期限、ユーザー情報を返す
  * - expires は日時文字列またはUNIX秒が返る場合があるため両方許容
- * - refresh_token はlocalStorage保存用（本番環境）
+ * - リフレッシュトークンはHttpOnly Cookieで管理（セキュリティ向上のため）
  */
 export interface LoginResponse {
   token: string;
   expires: ISODateString | number;
-  refresh_token?: string;
   user: User;
-}
-/**
- * プロジェクト情報
- * - 一覧表示や更新管理などに利用
- */
-export interface Project {
-  id: number | string;
-  name: string;
-  updatedAt: ISODateString | string | number;
 }
 
 /**

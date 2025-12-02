@@ -47,6 +47,8 @@ export default function SignUp({
       // 他タブに認証状態の更新を通知
       window.dispatchEvent(new Event("authorized"));
 
+      // Cookieの保存完了を待ってから遷移（ブラウザのCookie保存は非同期）
+      await new Promise((resolve) => setTimeout(resolve, 50));
       navigate("/me", { replace: true });
     } catch (err: unknown) {
       const message =

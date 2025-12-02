@@ -41,6 +41,8 @@ export default function Login({
       scheduleTokenRefresh();
 
       onSuccess?.(res);
+      // Cookieの保存完了を待ってから遷移（ブラウザのCookie保存は非同期）
+      await new Promise((resolve) => setTimeout(resolve, 50));
       navigate("/me", { replace: true });
     } catch (err: unknown) {
       // エラーメッセージを取得（APIエラーからメッセージを抽出）
