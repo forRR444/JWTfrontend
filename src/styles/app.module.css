@@ -248,10 +248,13 @@
 }
 
 .infoLabel {
-  flex: 0 0 120px;
+  flex: 0 0 90px;
   font-size: 13px;
   font-weight: 500;
   color: #666;
+  border-right: 1px solid #e0e0e0;
+  padding-right: 12px;
+  margin-right: 12px;
 }
 
 .infoValue {
@@ -266,7 +269,7 @@
   }
 
   .infoLabel {
-    flex: 0 0 160px;
+    flex: 0 0 120px;
     font-size: 14px;
   }
 

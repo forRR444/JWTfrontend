@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiFetch, refreshToken } from "./api";
+import { fetchMe, refreshToken } from "./api";
+import type { User } from "./types";
 import { AppHeader } from "./components/AppHeader";
 import { HeaderActions } from "./components/HeaderActions";
 import { AppNavigation } from "./components/AppNavigation";
+import { NutritionGoalModal } from "./components/NutritionGoalModal";
 import styles from "./styles/app.module.css";
 import mealStyles from "./styles/meals.module.css";
-
-type Me = { id: number | string; name: string };
 
 /**
  * マイページ
@@ -15,8 +15,9 @@ type Me = { id: number | string; name: string };
  * - 認証切れ時はエラー表示 → /login へ誘導
  */
 export default function MePage({ onLogout }: { onLogout: () => void }) {
-  const [me, setMe] = useState<Me | null>(null);
+  const [me, setMe] = useState<User | null>(null);
   const [error, setError] = useState("");
+  const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const navigate = useNavigate();
   const token = localStorage.getItem("access_token");
 
@@ -28,7 +29,7 @@ export default function MePage({ onLogout }: { onLogout: () => void }) {
     }
     (async () => {
       try {
-        const data = await apiFetch<Me>("/me", { token });
+        const data = await fetchMe();
         setMe(data);
       } catch (e: unknown) {
         const message =
@@ -52,6 +53,11 @@ export default function MePage({ onLogout }: { onLogout: () => void }) {
     } catch {
       alert("更新に失敗。再ログインしてください");
     }
+  };
+
+  // ユーザー情報更新処理
+  const handleUserUpdate = (updatedUser: User) => {
+    setMe(updatedUser);
   };
 
   if (error)
@@ -89,9 +95,59 @@ export default function MePage({ onLogout }: { onLogout: () => void }) {
               <div className={styles.infoLabel}>名前</div>
               <div className={styles.infoValue}>{me.name}</div>
             </div>
+            <div className={styles.infoRow}>
+              <div className={styles.infoLabel}>メールアドレス</div>
+              <div className={styles.infoValue}>{me.email}</div>
+            </div>
+          </div>
+        </div>
+
+        <div className={mealStyles.formCard}>
+          <div className={mealStyles.nutritionHeader}>
+            <h2 className={mealStyles.formTitle}>目標栄養素</h2>
+            <button
+              onClick={() => setIsGoalModalOpen(true)}
+              className={mealStyles.nutritionButton}
+            >
+              目標を設定
+            </button>
+          </div>
+          <div className={styles.cardContent}>
+            <div className={styles.infoRow}>
+              <div className={styles.infoLabel}>目標カロリー</div>
+              <div className={styles.infoValue}>
+                {me.target_calories != null ? `${me.target_calories} kcal` : "-"}
+              </div>
+            </div>
+            <div className={styles.infoRow}>
+              <div className={styles.infoLabel}>目標たんぱく質</div>
+              <div className={styles.infoValue}>
+                {me.target_protein != null ? `${me.target_protein} g` : "-"}
+              </div>
+            </div>
+            <div className={styles.infoRow}>
+              <div className={styles.infoLabel}>目標脂質</div>
+              <div className={styles.infoValue}>
+                {me.target_fat != null ? `${me.target_fat} g` : "-"}
+              </div>
+            </div>
+            <div className={styles.infoRow}>
+              <div className={styles.infoLabel}>目標炭水化物</div>
+              <div className={styles.infoValue}>
+                {me.target_carbohydrate != null ? `${me.target_carbohydrate} g` : "-"}
+              </div>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* 目標設定モーダル */}
+      <NutritionGoalModal
+        user={me}
+        isOpen={isGoalModalOpen}
+        onClose={() => setIsGoalModalOpen(false)}
+        onUpdate={handleUserUpdate}
+      />
     </div>
   );
 }
