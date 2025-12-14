@@ -7,9 +7,8 @@ export default defineConfig({
   server: {
     proxy: {
       // /api/* のリクエストをバックエンドにプロキシ
-      // Docker環境ではサービス名（backend）を使用
       "/api": {
-        target: "http://backend:3000",
+        target: "http://localhost:3000",
         changeOrigin: true,
         // Cookieを転送
         configure: (proxy, _options) => {

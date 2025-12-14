@@ -13,6 +13,9 @@ import styles from "../../styles/meals.module.css";
 const AVAILABLE_TAGS = ["外食", "自炊", "和食", "洋食", "中華", "韓国料理", "イタリアン"];
 const DEFAULT_GRAMS_FOR_SEARCH = "100";
 
+// 倍数オプション
+const MULTIPLIER_OPTIONS = [0.5, 1, 2, 3] as const;
+
 interface MealFormProps {
   selectedDate: string;
   onSubmit: (mealData: {
@@ -43,6 +46,19 @@ export const MealForm: React.FC<MealFormProps> = ({ selectedDate, onSubmit }) =>
   const [fat, setFat] = useState("");
   const [carbohydrate, setCarbohydrate] = useState("");
   const [tags, setTags] = useState<string[]>([]);
+
+  // 基準値（検索結果から選択した時の100gあたりの値）
+  const [baseValues, setBaseValues] = useState<{
+    grams: string;
+    calories: string;
+    protein: string;
+    fat: string;
+    carbohydrate: string;
+  } | null>(null);
+
+  // 現在選択中の倍数
+  const [selectedMultiplier, setSelectedMultiplier] = useState<number>(1);
+  const [customMultiplier, setCustomMultiplier] = useState<string>("");
 
   // UI状態
   const [error, setError] = useState<string | null>(null);
@@ -111,10 +127,28 @@ export const MealForm: React.FC<MealFormProps> = ({ selectedDate, onSubmit }) =>
     setGrams(DEFAULT_GRAMS_FOR_SEARCH);
 
     // 栄養情報を文字列に変換してセット
-    if (food.calories) setCalories(String(food.calories));
-    if (food.protein) setProtein(String(food.protein));
-    if (food.fat) setFat(String(food.fat));
-    if (food.carbohydrate) setCarbohydrate(String(food.carbohydrate));
+    const caloriesStr = food.calories ? String(food.calories) : "";
+    const proteinStr = food.protein ? String(food.protein) : "";
+    const fatStr = food.fat ? String(food.fat) : "";
+    const carbohydrateStr = food.carbohydrate ? String(food.carbohydrate) : "";
+
+    setCalories(caloriesStr);
+    setProtein(proteinStr);
+    setFat(fatStr);
+    setCarbohydrate(carbohydrateStr);
+
+    // 基準値を保存（倍数計算用）
+    setBaseValues({
+      grams: DEFAULT_GRAMS_FOR_SEARCH,
+      calories: caloriesStr,
+      protein: proteinStr,
+      fat: fatStr,
+      carbohydrate: carbohydrateStr,
+    });
+
+    // 倍数をリセット
+    setSelectedMultiplier(1);
+    setCustomMultiplier("");
 
     // 検索状態をクリア
     setSearchResults([]);
@@ -137,6 +171,34 @@ export const MealForm: React.FC<MealFormProps> = ({ selectedDate, onSubmit }) =>
     setHasSearched(false);
   };
 
+  // 倍数を適用（基準値に対して適用）
+  const applyMultiplier = (multiplier: number) => {
+    if (!baseValues) return;
+
+    const multiplyValue = (value: string) => {
+      if (!value) return "";
+      const num = parseFloat(value);
+      if (isNaN(num)) return value;
+      return String(Math.round(num * multiplier * 10) / 10);
+    };
+
+    setGrams(multiplyValue(baseValues.grams));
+    setCalories(multiplyValue(baseValues.calories));
+    setProtein(multiplyValue(baseValues.protein));
+    setFat(multiplyValue(baseValues.fat));
+    setCarbohydrate(multiplyValue(baseValues.carbohydrate));
+    setSelectedMultiplier(multiplier);
+    setCustomMultiplier("");
+  };
+
+  // カスタム倍数を適用
+  const applyCustomMultiplier = () => {
+    const multiplier = parseFloat(customMultiplier);
+    if (!isNaN(multiplier) && multiplier > 0) {
+      applyMultiplier(multiplier);
+    }
+  };
+
   // フォームをリセット
   const resetForm = () => {
     setContent("");
@@ -151,6 +213,9 @@ export const MealForm: React.FC<MealFormProps> = ({ selectedDate, onSubmit }) =>
     setSearchResults([]);
     setHasSearched(false);
     setShowDetails(false);
+    setBaseValues(null);
+    setSelectedMultiplier(1);
+    setCustomMultiplier("");
   };
 
   // フォーム送信処理
@@ -326,9 +391,55 @@ export const MealForm: React.FC<MealFormProps> = ({ selectedDate, onSubmit }) =>
 
         {/* オプション項目（詳細） */}
         {showDetails && (
-          <div className={`${styles.formRow} ${styles.formRow4Col}`}>
-            <div className={styles.formGroup}>
-              <label htmlFor="grams" className={styles.label}>グラム数 (g)</label>
+          <>
+            {/* 倍数調整ボタン */}
+            <div className={styles.multiplierSection}>
+              <span className={styles.multiplierLabel}>倍数調整:</span>
+              <div className={styles.multiplierButtons}>
+                {MULTIPLIER_OPTIONS.map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => applyMultiplier(m)}
+                    className={`${styles.multiplierButton} ${selectedMultiplier === m && !customMultiplier ? styles.multiplierButtonActive : ""}`}
+                    disabled={!baseValues}
+                  >
+                    ×{m}
+                  </button>
+                ))}
+                <div className={styles.customMultiplierWrapper}>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="0.1"
+                    min="0.1"
+                    value={customMultiplier}
+                    onChange={(e) => setCustomMultiplier(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        applyCustomMultiplier();
+                      }
+                    }}
+                    placeholder="×"
+                    className={`${styles.customMultiplierInput} ${customMultiplier && selectedMultiplier === parseFloat(customMultiplier) ? styles.customMultiplierInputActive : ""}`}
+                    disabled={!baseValues}
+                  />
+                  <button
+                    type="button"
+                    onClick={applyCustomMultiplier}
+                    className={styles.customMultiplierApply}
+                    disabled={!baseValues || !customMultiplier}
+                  >
+                    適用
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className={`${styles.formRow} ${styles.formRow4Col}`}>
+              <div className={styles.formGroup}>
+                <label htmlFor="grams" className={styles.label}>グラム数 (g)</label>
               <input
                 id="grams"
                 type="number"
@@ -377,6 +488,7 @@ export const MealForm: React.FC<MealFormProps> = ({ selectedDate, onSubmit }) =>
               />
             </div>
           </div>
+          </>
         )}
       </form>
     </div>

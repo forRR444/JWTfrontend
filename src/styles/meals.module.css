@@ -259,6 +259,112 @@
   color: #666;
 }
 
+/* 倍数調整セクション */
+.multiplierSection {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 3px;
+}
+
+.multiplierLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: #4a4a4a;
+}
+
+.multiplierButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.multiplierButton {
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #4a90e2;
+  background: #ffffff;
+  border: 1px solid #4a90e2;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.multiplierButton:hover:not(:disabled) {
+  color: #ffffff;
+  background: #4a90e2;
+}
+
+.multiplierButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.multiplierButtonActive {
+  color: #ffffff;
+  background: #4a90e2;
+}
+
+.customMultiplierWrapper {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.customMultiplierInput {
+  width: 60px;
+  padding: 6px 8px;
+  font-size: 13px;
+  color: #1a1a1a;
+  background: #ffffff;
+  border: 1px solid #d0d0d0;
+  border-radius: 3px;
+  outline: none;
+  transition: border-color 0.15s ease;
+  font-family: inherit;
+}
+
+.customMultiplierInput:focus {
+  border-color: #4a90e2;
+}
+
+.customMultiplierInput:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.customMultiplierInputActive {
+  border-color: #4a90e2;
+  background: #e8f4ff;
+}
+
+.customMultiplierApply {
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #4a90e2;
+  background: #ffffff;
+  border: 1px solid #4a90e2;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.customMultiplierApply:hover:not(:disabled) {
+  color: #ffffff;
+  background: #4a90e2;
+}
+
+.customMultiplierApply:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* 詳細入力切り替えボタン */
 .toggleDetailsButton {
   padding: 6px 12px;
